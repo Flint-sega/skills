@@ -1,0 +1,21 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Синтаксис Python
+        run: python -m py_compile tools/*.py skills/autopilot/tools/sync.py
+      - name: "Smoke: sync.py вписывает снимок в дашборд"
+        run: python tools/smoke_sync.py
+      - name: Скан секретов
+        run: python tools/scan_secrets.py

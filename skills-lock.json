@@ -2,10 +2,10 @@
   "version": 1,
   "skills": {
     "autopilot": {
-      "source": "nick-vels/skills",
+      "source": "Flint-sega/skills",
       "sourceType": "github",
       "skillPath": "skills/autopilot/SKILL.md",
-      "computedHash": "918d6306d3c6e445a21ec52ffc48598816ff71c0972b24b0a16a053d7588aa3c"
+      "computedHash": "0684348a0784b756a318c109ff45aa440b9aed022196257c39fe0de9a8b89ac5"
     }
   }
 }
