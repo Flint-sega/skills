@@ -9,9 +9,12 @@
 Использование:
     python3 tools/measure-run.py <путь к каталогу проекта>
     python3 tools/measure-run.py ~/Documents/VScode/EDU/share
+    python3 tools/measure-run.py <проект> --logs-dir ~/.zcode/logs/<...>
 
-Каталог логов вычисляется из пути проекта так же, как это делает Claude Code:
-слэши заменяются дефисами внутри ~/.claude/projects/.
+Каталог логов по умолчанию вычисляется из пути проекта так же, как это делает
+Claude Code: слэши заменяются дефисами внутри ~/.claude/projects/. Другой
+харнесс логи так не раскладывает — для него каталог передаётся явно через
+--logs-dir (формат строк тот же: JSONL с message.usage у ассистентских шагов).
 
 Нормировка стоимости — относительно входного токена:
     output ×5 · cache_write ×1.25 · cache_read ×0.1
@@ -122,10 +125,31 @@ def analyse(path, label):
     }
 
 
+def split_logs_dir_arg(argv):
+    """Вынимает --logs-dir (в формах `--logs-dir PATH` и `--logs-dir=PATH`).
+
+    Возвращает (остаток аргументов, каталог логов или None)."""
+    rest = list(argv)
+    override = None
+    if "--logs-dir" in rest:
+        i = rest.index("--logs-dir")
+        if i + 1 >= len(rest):
+            sys.exit("--logs-dir требует путь")
+        override = rest[i + 1]
+        del rest[i:i + 2]
+    else:
+        for a in list(rest):
+            if a.startswith("--logs-dir="):
+                override = a.split("=", 1)[1]
+                rest.remove(a)
+    return rest, override
+
+
 def main():
-    if len(sys.argv) < 2:
+    args, override = split_logs_dir_arg(sys.argv[1:])
+    if not args:
         sys.exit(__doc__)
-    d = logs_dir_for(sys.argv[1])
+    d = os.path.expanduser(override) if override else logs_dir_for(args[0])
     if not os.path.isdir(d):
         sys.exit(f"нет логов: {d}")
 
@@ -139,10 +163,10 @@ def main():
         n = len(glob.glob(os.path.join(p[:-6], "subagents", "*.jsonl")))
         return (n, os.path.getsize(p))
 
-    if len(sys.argv) > 2:                       # явный выбор: id сессии
-        picked = [p for p in sessions if sys.argv[2] in os.path.basename(p)]
+    if len(args) > 1:                            # явный выбор: id сессии
+        picked = [p for p in sessions if args[1] in os.path.basename(p)]
         if not picked:
-            sys.exit(f"сессия {sys.argv[2]} не найдена в {d}")
+            sys.exit(f"сессия {args[1]} не найдена в {d}")
         main_log = picked[0]
     else:
         main_log = max(sessions, key=weight)
@@ -165,7 +189,7 @@ def main():
     results.sort(key=lambda r: -r["norm"])
 
     total = sum(r["norm"] for r in results) or 1
-    print(f"\nПрогон: {sys.argv[1]}   контекстов: {len(results)}\n")
+    print(f"\nПрогон: {args[0]}   контекстов: {len(results)}\n")
     print(f"{'контекст':<38}{'шагов':>7}{'ср.ctx':>9}{'макс':>9}{'>120K':>7}{'норм.ед':>11}{'доля':>7}")
     print("-" * 88)
     for r in results:

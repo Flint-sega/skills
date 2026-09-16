@@ -12,6 +12,7 @@ The repo needs a file that tells the **next** session what this project is — `
 | `AGENTS.md` already exists | `AGENTS.md` |
 | both exist | the one that already holds the project description; if neither does, `AGENTS.md` — and **leave the other file alone** |
 | `.claude/` directory, or `$CLAUDECODE` / `$CLAUDE_CODE_ENTRYPOINT` is set | `CLAUDE.md` |
+| `.zcode/` directory in the repo, or `~/.zcode/` on the machine (ZCode harness) | `AGENTS.md` |
 | `.cursor/` directory | `AGENTS.md` |
 | `.codex/` directory, or `.github/copilot-instructions.md` | `AGENTS.md` |
 | nothing matched | `AGENTS.md` as the real file **+ `CLAUDE.md` containing one line: `См. @AGENTS.md`** |

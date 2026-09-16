@@ -6,9 +6,9 @@
 
 ## Modes
 
-Everything typed after `/autopilot` splits into four parts: **the mode** (optional bare word — `full`, `semi`, `interview`, `manual`), **the depth** (optional bare word — `strict`, `deep`), **the finish** (optional bare word — `polish`), and **the brief** (everything else). No dashes on any parameter. Text that is not a recognised parameter is always brief.
+Everything typed after `/autopilot` splits into five parts: **the mode** (optional bare word — `full`, `semi`, `interview`, `manual`), **the depth** (optional bare word — `strict`, `deep`), **the finish** (optional bare word — `polish`), **the execution** (optional bare word — `serial`), and **the brief** (everything else). No dashes on any parameter. Text that is not a recognised parameter is always brief.
 
-`/autopilot full deep интернет-магазин керамики` — full mode, deep elaboration. Order does not matter; all three parameters are optional and independent.
+`/autopilot full deep интернет-магазин керамики` — full mode, deep elaboration. Order does not matter; all four parameters are optional and independent.
 
 | Mode | Triggers | Human gates |
 |---|---|---|
@@ -32,6 +32,7 @@ A mode decides two separate things — how much the user is asked about the *pro
   • «ручной режим» — то же плюс согласуешь спецификацию и список тасков
   • «строго по брифу» / «проработай глубоко» — меньше или больше проработки сверх сказанного
   • «вылижи» — в конце сравню с эталоном и доведу; дольше и дороже
+  • «по одному» — субагенты строго по очереди, если параллельные сессии падают
   ```
 
   With `polish` on, the first line names it and its ceiling: «Режим: полуавтомат · глубина: обычная · доводка: до трёх кругов».
@@ -62,6 +63,18 @@ How far past the brief's own words the spec is allowed to go. The mode decides *
 - **Depth can be changed mid-run** («поменьше отсебятины», «продумай глубже») — applies from the next phase. Already-written spec sections are not retroactively trimmed unless the user asks.
 
 The rules for each level live in `phases/3-spec.md`.
+
+## Execution — one at a time
+
+Parallel-by-default is a claim about the *harness*, not about the work: subagents fly together when the provider behind them takes it. Some do not — parallel sessions start dropping mid-run — and a run that keeps launching whole waves into a flapping provider pays for parallelism it never gets.
+
+| | Triggers | What it changes |
+|---|---|---|
+| **serial** | `/autopilot serial`, «по одному», «по очереди», «не параллельно», «строго последовательно», "one at a time", "serially" | how waves are launched — everything else about them holds |
+
+- **The wave still exists.** It is the dependency frontier and Phase 4 still cuts it; what changes is the launch: one ticket at a time, the next out when the previous returns. The rule itself lives where the launches happen — `phases/5-subagents.md`.
+- **Switching it on mid-run is the ordinary use.** The provider starts dropping parallel sessions → «по одному» in one line, `execution` flips to `serial` in `state.js`, and every flight after that goes out alone. A provider that has recovered does not un-flap the run: leave it serial unless the user asks.
+- **Announced with the mode when set at the start** — «Режим: полуавтомат · глубина: обычная · запуск: по одному» — and recorded in `state.js` as `execution`, so a resume does not re-derive it.
 
 ## Polish — доводка
 

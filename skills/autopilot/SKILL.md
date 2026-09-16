@@ -28,6 +28,8 @@ This file is the orchestrator: modes, phase order, gates. The rules for each pha
 
 **Twice only where the table says twice** — `7-instruments.md` in Phase 4, `9-memory.md` in Phases 5 and 8, legitimate there because the run has usually been compacted in between. Everywhere else, re-reading because «details have faded» buys a copy of what is still in the context.
 
+**Never rely on the working directory.** It is per-call state in some harnesses and drifts even where it persists. Every shell block re-derives the root inline — `$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)` — the way the blocks in `phases/` already do, and any block you write yourself does the same. A `cd` in one call buys nothing in the next, and a relative path that worked at the start of the run finds a different tree after one.
+
 **After a compaction, re-read the state, not the phases.** `state.js` (it holds `skillDir`, the reviewers and the tickets), `manifest.md`, `interfaces.md`, and the file of the phase you are actually in — those four and nothing else. The pull is to reopen `5-subagents.md` to recover the thread; that spends eight thousand tokens re-reading rules you are already executing, and the thread was never in them.
 
 | Phase | Read | Produces |
@@ -68,11 +70,11 @@ Two rules hold this together:
 
 Phases 7 and 9 are not sequential, and each is split in two along the line where it is read. The instruments are raised in Phase 0 from `phases/0-instruments.md` — template, starting state, the update ritual — and `phases/7-instruments.md` is opened only when the tickets are cut. The project memory is raised in Phase 0 from `phases/0-memory.md` — which file, and the skeleton — and `phases/9-memory.md` is opened when the build discovers something and again in Phase 8, where a subagent writes the full description from the finished code.
 
-## The three dials
+## The dials
 
-Everything typed after `/autopilot` splits into four parts: **the mode** (`full`, `semi`, `interview`, `manual` — default `semi`), **the depth** (`strict`, `deep` — default normal), **the finish** (`polish` — off by default), and **the brief** (everything else). Bare words, no dashes; anything unrecognised is brief.
+Everything typed after `/autopilot` splits into five parts: **the mode** (`full`, `semi`, `interview`, `manual` — default `semi`), **the depth** (`strict`, `deep` — default normal), **the finish** (`polish` — off by default), **the execution** (`serial` — off by default), and **the brief** (everything else). Bare words, no dashes; anything unrecognised is brief.
 
-**The rules for all three are in `phases/0-modes.md`, read in Phase 0 with `phases/0-preflight.md`** — the triggers in both languages, the opening block that announces the resolved settings, what each depth permits, and what happens when the user switches mid-run. They are decided once, before Phase 1, and every phase after that only applies them; carrying the argument for why there are four modes instead of three through nine phases is what that file exists to prevent.
+**The rules for all four are in `phases/0-modes.md`, read in Phase 0 with `phases/0-preflight.md`** — the triggers in both languages, the opening block that announces the resolved settings, what each depth permits, and what happens when the user switches mid-run. They are decided once, before Phase 1, and every phase after that only applies them; carrying the argument for why there are four modes instead of three through nine phases is what that file exists to prevent.
 
 What stays here is the consequence: the table in `The flight` below, which says exactly which cells each mode changes. Two things about the dials never move, and they are repeated there because they are not calibration — **no mode removes the manifest gates, and no mode removes the safety gates.**
 
