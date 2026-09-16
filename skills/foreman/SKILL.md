@@ -1,14 +1,14 @@
 ---
-name: autopilot
-description: Use when the user dictates an app, site, bot, or feature to build end-to-end and expects a finished result without reviewing specs, tickets, or code — vibecoding sessions, non-technical users, "собери под ключ", "build it for me", "не задавай лишних вопросов" requests. Also use when the user invokes /autopilot, or asks for a build in a named mode, depth or finish — «полный автомат», «режим интервью», «погриль меня», «ручной режим», «строго по брифу», «проработай глубоко», «вылижи до эталона». Also for the verb forms: «продолжи программу», «выполни задачи из STATE.md», /program; «проверь что получилось», «прими результат», /verify; «сломалось», «инцидент», «разбери поломку», /incident; «опиши проект», «обнови документацию», «перепиши README», /docs.
+name: foreman
+description: Use when the user dictates an app, site, bot, or feature to build end-to-end and expects a finished result without reviewing specs, tickets, or code — vibecoding sessions, non-technical users, "собери под ключ", "build it for me", "не задавай лишних вопросов" requests. Also use when the user invokes /foreman, or asks for a build in a named mode, depth or finish — «полный автомат», «режим интервью», «погриль меня», «ручной режим», «строго по брифу», «проработай глубоко», «вылижи до эталона». Also for the verb forms: «продолжи программу», «выполни задачи из STATE.md», /program; «проверь что получилось», «прими результат», /verify; «сломалось», «инцидент», «разбери поломку», /incident; «опиши проект», «обнови документацию», «перепиши README», /docs.
 argument-hint: "[build|program|verify|incident|docs] [full|semi|interview|manual] [strict|deep] [polish] [serial] что нужно построить, путь к brief.md или файл программы"
 ---
 
-# Autopilot
+# Foreman
 
 ## Overview
 
-Autopilot flies a dictated idea from words to a working project **in one dialogue**, without making the user approve each stage. It is self-contained: every rule it needs lives in `phases/`. No other skill has to be installed.
+Foreman flies a dictated idea from words to a working project **in one dialogue**, without making the user approve each stage. It is self-contained: every rule it needs lives in `phases/`. No other skill has to be installed.
 
 Two ideas carry the whole design.
 
@@ -76,7 +76,7 @@ Phases 7 and 9 are not sequential, and each is split in two along the line where
 
 ## The dials
 
-Everything typed after `/autopilot` splits into five parts: **the mode** (`full`, `semi`, `interview`, `manual` — default `semi`), **the depth** (`strict`, `deep` — default normal), **the finish** (`polish` — off by default), **the execution** (`serial` — off by default), and **the brief** (everything else). Bare words, no dashes; anything unrecognised is brief.
+Everything typed after `/foreman` splits into five parts: **the mode** (`full`, `semi`, `interview`, `manual` — default `semi`), **the depth** (`strict`, `deep` — default normal), **the finish** (`polish` — off by default), **the execution** (`serial` — off by default), and **the brief** (everything else). Bare words, no dashes; anything unrecognised is brief.
 
 **The rules for all four are in `phases/0-modes.md`, read in Phase 0 with `phases/0-preflight.md`** — the triggers in both languages, the opening block that announces the resolved settings, what each depth permits, and what happens when the user switches mid-run. They are decided once, before Phase 1, and every phase after that only applies them; carrying the argument for why there are four modes instead of three through nine phases is what that file exists to prevent.
 
@@ -103,8 +103,8 @@ A verb is not a small-task shortcut. A one-file change is done directly, a quest
 - User dictates what to build and expects the finished thing, not a collaboration on process.
 - User is non-technical: will not read specs, judge ticket granularity, or review code.
 - "Собери под ключ", "just build it", "не задавай лишних вопросов".
-- User wants the idea taken apart with them question by question, and the build done without them — that is **interview** mode, still Autopilot.
-- User wants to approve the spec and the tickets but not to run the pipeline by hand — that is **manual** mode, still Autopilot.
+- User wants the idea taken apart with them question by question, and the build done without them — that is **interview** mode, still Foreman.
+- User wants to approve the spec and the tickets but not to run the pipeline by hand — that is **manual** mode, still Foreman.
 
 **When NOT to use:** the user wants to co-author the code itself line by line (work with them directly); the task is a small single-file change (just do it); the idea is bigger than one project and its destination is unclear (settle the destination first, then return here).
 
@@ -176,7 +176,7 @@ docs/adr/               decisions worth outliving the run — written in Phase 9
 
 The brief is dated in its filename because a run directory outlives one sitting — the directory's date is the day the run started, the brief's is the day that brief was dictated. The dashboard is opened for the user, not described to them: it shows the eight stages of the cycle, where the run is now, and a live clock on the run, the current stage and the current ticket.
 
-`.autopilot/` is the record of **this** run; the memory file at the root is the project as it stands, for whoever opens the repo next; `docs/adr/` is why it stands that way. Autopilot's content in the memory file lives between `<!-- autopilot:start -->` markers — everything the user wrote outside them is untouchable. See `phases/9-memory.md`.
+`.autopilot/` is the record of **this** run; the memory file at the root is the project as it stands, for whoever opens the repo next; `docs/adr/` is why it stands that way. Foreman's content in the memory file lives between `<!-- autopilot:start -->` markers — everything the user wrote outside them is untouchable. See `phases/9-memory.md`.
 
 The three are not interchangeable, and the split is what keeps the spec throwaway. `spec.md` is worth nothing the day the work ships; the reasoning inside it — why this data model, what the build proved wrong, which word means which thing — is worth something for years, and it dies with `.autopilot/` unless something routes it out. That is what the ADRs are for.
 

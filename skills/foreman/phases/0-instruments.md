@@ -27,7 +27,7 @@ cp "${TPL%/phases/*}/tools/sync.py" "$A/sync.py"
 
 **Every path here is absolute, and the `echo` runs before the copy.** Four ways this used to fail, all measured on 2026-08-19 and all silent: a chained `cp && ln && echo` drops `skillDir` when `ln` refuses; `find` returns a *relative* path when the skill is installed inside the project (`.claude/skills/`), and a relative `skillDir` is one no subagent can open; a run started from a subdirectory built `.autopilot/` in the wrong place; and `cp` onto a directory Phase 0 step 3 had not created yet failed outright. Hence `$A` from the git root, `pwd -P` (which also resolves the symlink skills are installed through), and `mkdir -p`. `ln -sfn`, not `-sf`: on a symlink pointing at a directory BSD `ln` without `-n` writes *inside* it and reports success.
 
-**`find -L`, and no `*` anywhere in it** — both measured on 2026-08-17. Skills are installed as symlinks (`~/.claude/skills/autopilot` → `~/.agents/skills/autopilot`) and a plain `find` will not follow one, so it reports nothing while the file sits right there; a `plugins/*/` glob is worse still, because in zsh an unmatched glob aborts the command before it runs — and the same line works in bash, which is what makes it hard to notice.
+**`find -L`, and no `*` anywhere in it** — both measured on 2026-08-17. Skills are installed as symlinks (`~/.claude/skills/foreman` → `~/.agents/skills/foreman`) and a plain `find` will not follow one, so it reports nothing while the file sits right there; a `plugins/*/` glob is worse still, because in zsh an unmatched glob aborts the command before it runs — and the same line works in bash, which is what makes it hard to notice.
 
 Empty output means the skill lives somewhere none of those six roots cover: widen the search once, by hand, and carry on. Never regenerate the template, never read it into context, never edit it after the copy.
 
@@ -57,7 +57,7 @@ window.STATE =
   "briefFile": "2026-08-07-brief.md",
   "memoryFile": "AGENTS.md",
   "conventionsFile": null,
-  "skillDir": "/Users/x/.claude/skills/autopilot",
+  "skillDir": "/Users/x/.claude/skills/foreman",
   "startedAt": "2026-08-07T14:02:06+03:00",
   "updatedAt": "2026-08-07T14:02:06+03:00",
   "finishedAt": null,

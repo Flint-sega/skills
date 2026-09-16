@@ -171,7 +171,7 @@ The line between the two kinds is the whole discipline of this mode:
 
 Identical here — the two modes part company only at the spec and the plan, two phases later. Same rules as `semi`, no cap, and the wider line on which forks reach the user. Keep going while genuine forks remain, then say so plainly: «Вопросов больше нет, пишу спецификацию».
 
-The thing to guard against in these two is not length, it is **drift into process**. «Какой стек берём?», «нарезать на таски помельче?», «показать спецификацию?» are not interview questions — they are the questions Autopilot exists to answer itself, and asking them is how a mode the user chose for its thoroughness turns into the meeting they were avoiding. Every question still names its manifest row.
+The thing to guard against in these two is not length, it is **drift into process**. «Какой стек берём?», «нарезать на таски помельче?», «показать спецификацию?» are not interview questions — they are the questions Foreman exists to answer itself, and asking them is how a mode the user chose for its thoroughness turns into the meeting they were avoiding. Every question still names its manifest row.
 
 ## Closing
 

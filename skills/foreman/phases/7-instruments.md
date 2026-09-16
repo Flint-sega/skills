@@ -24,7 +24,7 @@ window.STATE =
   "briefFile": "2026-08-07-brief.md",
   "memoryFile": "AGENTS.md",
   "conventionsFile": "AGENTS.md",
-  "skillDir": "/Users/x/.claude/skills/autopilot",
+  "skillDir": "/Users/x/.claude/skills/foreman",
   "startedAt": "2026-08-07T14:02:06+03:00",
   "updatedAt": "2026-08-07T15:31:43+03:00",
   "finishedAt": null,

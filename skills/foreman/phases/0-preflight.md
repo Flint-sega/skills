@@ -19,7 +19,7 @@ In that case: derive a new slug and its dated directory name (step 1) and create
 
 **The order inside that sentence is the whole of it: archive, write, then open.** Opening first shows the user the run that already shipped — eight green stages and last month's project name — and it looks exactly like a dashboard that works, so nobody goes looking. The same trap has a second door: a pane or an HTTP server left over from another flight, possibly in another repository on this machine, that answers on a port this run never started. Both are closed by the checks in `phases/0-instruments.md` §3, and neither is closed by looking at the screen.
 
-**Nothing here is a question for the user.** These are process decisions, not product ones. No mode buys the user a say in where ticket files live; asking about it is exactly the kind of question Autopilot exists to remove.
+**Nothing here is a question for the user.** These are process decisions, not product ones. No mode buys the user a say in where ticket files live; asking about it is exactly the kind of question Foreman exists to remove.
 
 ## 1. Name the flight
 
@@ -112,7 +112,7 @@ Write `.autopilot/README.md` — a short note for the human, not for the agent:
   - `spec.md` — спецификация.
   - `tickets/` — таски, на которые разбита сборка (если сборка мелкая, их нет).
 
-Если сборка прервалась — скажи агенту «продолжи автопилот», он поднимет состояние отсюда.
+Если сборка прервалась — скажи агенту «продолжи прогон», он поднимет состояние отсюда.
 
 ## Прогоны
 

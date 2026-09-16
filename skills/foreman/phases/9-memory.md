@@ -17,7 +17,7 @@ The last two are what this file is about. Everything in the memory file must be 
 
 ## Where the content lives — the markers
 
-Everything Autopilot writes sits between two markers, in every case, including a file it created itself:
+Everything Foreman writes sits between two markers, in every case, including a file it created itself:
 
 ```markdown
 <!-- autopilot:start -->
@@ -25,9 +25,9 @@ Everything Autopilot writes sits between two markers, in every case, including a
 <!-- autopilot:end -->
 ```
 
-One rule, and it buys two things: updating is «replace what is between the markers», and **anything the user wrote outside them is untouchable**. A brownfield repo whose CLAUDE.md carries a team's hard-won rules must come out of an Autopilot run with those rules intact.
+One rule, and it buys two things: updating is «replace what is between the markers», and **anything the user wrote outside them is untouchable**. A brownfield repo whose CLAUDE.md carries a team's hard-won rules must come out of an Foreman run with those rules intact.
 
-If the markers are missing on a later run but Autopilot's sections are recognisably there, wrap them — do not append a second copy.
+If the markers are missing on a later run but Foreman's sections are recognisably there, wrap them — do not append a second copy.
 
 ## Moment 2 — during the build
 
@@ -81,7 +81,7 @@ The file scales with the project, exactly like the ticket tiers do.
 | Команды | установка, запуск, тесты, сборка — проверенные |
 | Структура | дерево на 5–15 строк, у каждой папки — назначение |
 | Подводные камни | то, что неочевидно и уже кого-то укусило |
-| Как здесь работает Autopilot | из скелета, без изменений |
+| Как здесь работает Foreman | из скелета, без изменений |
 
 **T2–T3 — плюс к этому:**
 

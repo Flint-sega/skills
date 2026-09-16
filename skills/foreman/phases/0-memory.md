@@ -31,7 +31,7 @@ Say it and move on. **Do not wait for an answer** — if the user names a differ
 
 ## The skeleton
 
-Cheap, written before anything is built, and it is what survives an interrupted run. Only what is already known — everything Autopilot writes sits between the two markers, in every case, including a file it created itself:
+Cheap, written before anything is built, and it is what survives an interrupted run. Only what is already known — everything Foreman writes sits between the two markers, in every case, including a file it created itself:
 
 ```markdown
 <!-- autopilot:start -->
@@ -47,19 +47,19 @@ Cheap, written before anything is built, and it is what survives an interrupted 
 | `<запуск>` | Запустить локально |
 | `<тесты>` | Прогнать тесты |
 
-## Как здесь работает Autopilot
+## Как здесь работает Foreman
 
-Сборка ведётся навыком `/autopilot`. Требования, спецификация и таски — в `.autopilot/`.
+Сборка ведётся навыком `/foreman`. Требования, спецификация и таски — в `.autopilot/`.
 Прогресс — `.autopilot/dashboard.html`. Правило: требование из `manifest.md`
 может снять только пользователь.
 
-Если работа продолжается — скажи «продолжи автопилот»: состояние поднимется
+Если работа продолжается — скажи «продолжи прогон»: состояние поднимется
 из `.autopilot/state.js`, переспрашивать ничего не нужно.
 <!-- autopilot:end -->
 ```
 
 Commands that are not known yet are simply absent. **An invented command is worse than a missing one** — the next session runs it, it fails, and now the whole file is suspect.
 
-**Anything the user wrote outside the markers is untouchable.** A brownfield repo whose `CLAUDE.md` carries a team's hard-won rules must come out of an Autopilot run with those rules intact. If the markers are missing on a later run but Autopilot's sections are recognisably there, wrap them — do not append a second copy. The reasoning is in `phases/9-memory.md`.
+**Anything the user wrote outside the markers is untouchable.** A brownfield repo whose `CLAUDE.md` carries a team's hard-won rules must come out of an Foreman run with those rules intact. If the markers are missing on a later run but Foreman's sections are recognisably there, wrap them — do not append a second copy. The reasoning is in `phases/9-memory.md`.
 
 In the third Phase 0 case — a configured repo starting a new feature — the memory file already exists: **top it up, do not rewrite it.** The skeleton is written once, in the run that created the repo.

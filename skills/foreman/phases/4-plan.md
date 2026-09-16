@@ -20,7 +20,7 @@ Decide the tier from **what has to be built**, then cut to it. State the tier an
 | **T1** | one coherent feature: a few surfaces over one data shape, at most one external service | 2–3 |
 | **T2** | several features, or one feature reaching across several layers — store, logic, interface, integration | 4–8 |
 | **T3** | ≥ 3 genuinely independent subsystems, each with its own data and its own reason to change | 9–16 |
-| **>16** | — | **not allowed.** Either justify it in a line in the spec, or split the work into two Autopilot runs |
+| **>16** | — | **not allowed.** Either justify it in a line in the spec, or split the work into two Foreman runs |
 
 **The tier is read from the product, never from the length of `spec.md`.** Depth decides how thoroughly each requirement is written up; it has nothing to say about how much there is to build. A `deep` spec for a landing page is a long document about one page — still T0, still one context, still no tickets. Sizing by word count quietly turns the depth dial into a ticket multiplier, which is the opposite of what it is for.
 
