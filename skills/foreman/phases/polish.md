@@ -2,7 +2,7 @@
 
 **Read only when the `polish` parameter is on.** It is off by default, and on a run without it this file does not exist.
 
-Not a phase in sequence. It runs **inside Phase 8, between the blind acceptance and the final report**, and it is the only part of Autopilot that repeats itself deliberately.
+Not a phase in sequence. It runs **inside Phase 8, between the blind acceptance and the final report**, and it is the only part of Foreman that repeats itself deliberately.
 
 Everything up to here measures the build against what was *asked for*. This measures it against what it should *be like* — and those are different questions with different answers. A landing page can satisfy every requirement in the manifest and still look like a form with a background colour.
 

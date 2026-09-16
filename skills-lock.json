@@ -1,11 +1,11 @@
 {
   "version": 1,
   "skills": {
-    "autopilot": {
+    "foreman": {
       "source": "Flint-sega/skills",
       "sourceType": "github",
-      "skillPath": "skills/autopilot/SKILL.md",
-      "computedHash": "d1a56a599d73dec164c02b027e8a049113925b5d51c8f8be93e4f0bfd52f8319"
+      "skillPath": "skills/foreman/SKILL.md",
+      "computedHash": "8f0ce6ada6d5b1038c2bda5b9d4ef5d68a2756ae3da1c1396baa0830e6e385cc"
     }
   }
 }

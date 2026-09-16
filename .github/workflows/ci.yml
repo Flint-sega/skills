@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Синтаксис Python
-        run: python -m py_compile tools/*.py skills/autopilot/tools/sync.py
+        run: python -m py_compile tools/*.py skills/foreman/tools/sync.py
       - name: "Smoke: sync.py вписывает снимок в дашборд"
         run: python tools/smoke_sync.py
       - name: Скан секретов

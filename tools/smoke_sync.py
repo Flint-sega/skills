@@ -15,7 +15,7 @@ import sys
 import tempfile
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-SKILL = REPO / "skills" / "autopilot"
+SKILL = REPO / "skills" / "foreman"
 BEGIN, END = "/*STATE-BEGIN*/", "/*STATE-END*/"
 
 STAGES = ["preflight", "manifest", "briefing", "spec", "plan", "build", "review", "final"]
