@@ -1,7 +1,7 @@
 ---
 name: autopilot
-description: Use when the user dictates an app, site, bot, or feature to build end-to-end and expects a finished result without reviewing specs, tickets, or code — vibecoding sessions, non-technical users, "собери под ключ", "build it for me", "не задавай лишних вопросов" requests. Also use when the user invokes /autopilot, or asks for a build in a named mode, depth or finish — «полный автомат», «режим интервью», «погриль меня», «ручной режим», «строго по брифу», «проработай глубоко», «вылижи до эталона».
-argument-hint: "[full|semi|interview|manual] [strict|deep] [polish] что нужно построить или путь к brief.md"
+description: Use when the user dictates an app, site, bot, or feature to build end-to-end and expects a finished result without reviewing specs, tickets, or code — vibecoding sessions, non-technical users, "собери под ключ", "build it for me", "не задавай лишних вопросов" requests. Also use when the user invokes /autopilot, or asks for a build in a named mode, depth or finish — «полный автомат», «режим интервью», «погриль меня», «ручной режим», «строго по брифу», «проработай глубоко», «вылижи до эталона». Also for the verb forms: «продолжи программу», «выполни задачи из STATE.md», /program; «проверь что получилось», «прими результат», /verify; «сломалось», «инцидент», «разбери поломку», /incident; «опиши проект», «обнови документацию», «перепиши README», /docs.
+argument-hint: "[build|program|verify|incident|docs] [full|semi|interview|manual] [strict|deep] [polish] [serial] что нужно построить, путь к brief.md или файл программы"
 ---
 
 # Autopilot
@@ -47,6 +47,10 @@ This file is the orchestrator: modes, phase order, gates. The rules for each pha
 | — | `phases/5-repair.md` — when a ticket comes back anything other than `DONE` | the repair path, retries, spec amendments |
 | — | `phases/rationalizations.md` — on a failed gate, on catching yourself excusing something, once before the report | nothing; it is a checklist |
 | — | `phases/polish.md` — only with the `polish` parameter | доводка rounds |
+| — | `phases/program.md` — only with the `program` verb | program file advanced, its tasks landed |
+| — | `phases/verify.md` — only with the `verify` verb | a blind acceptance report |
+| — | `phases/incident.md` — only with the `incident` verb | bleeding stopped, root cause, fix ticket, record |
+| — | `phases/docs.md` — only with the `docs` verb | README and memory rewritten from the code |
 
 ## The words the user sees
 
@@ -77,6 +81,22 @@ Everything typed after `/autopilot` splits into five parts: **the mode** (`full`
 **The rules for all four are in `phases/0-modes.md`, read in Phase 0 with `phases/0-preflight.md`** — the triggers in both languages, the opening block that announces the resolved settings, what each depth permits, and what happens when the user switches mid-run. They are decided once, before Phase 1, and every phase after that only applies them; carrying the argument for why there are four modes instead of three through nine phases is what that file exists to prevent.
 
 What stays here is the consequence: the table in `The flight` below, which says exactly which cells each mode changes. Two things about the dials never move, and they are repeated there because they are not calibration — **no mode removes the manifest gates, and no mode removes the safety gates.**
+
+## Verbs — what kind of work
+
+One optional bare word in front of everything else selects the kind of work:
+
+| Verb | Пользователю | What runs |
+|---|---|---|
+| **`build`** — the default | Сборка | the flight this file describes |
+| **`program`** | Программа | a long plan executed task by task — `phases/program.md` |
+| **`verify`** | Проверка | blind acceptance of what already exists — `phases/verify.md` |
+| **`incident`** | Инцидент | structured response to a breakage — `phases/incident.md` |
+| **`docs`** | Документация | the project described from its code — `phases/docs.md` |
+
+An unrecognised first word is brief, as always — the parsing does not change, the verb is simply recognised before the dials are. A verb's file is **read when the verb fires, not before**: `build` adds no file, because this file is its rules. The dials apply where they still mean something — mode, depth and execution to `program`; `verify`, `incident` and `docs` run a fixed procedure and take none.
+
+A verb is not a small-task shortcut. A one-file change is done directly, a question is answered — the verb runs when its kind of work is actually asked for.
 
 ## When to Use
 
