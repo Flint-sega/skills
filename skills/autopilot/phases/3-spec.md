@@ -181,6 +181,8 @@ Phase 4 seeds `interfaces.md` from this section before the first ticket flies. W
 
 If `CONTEXT.md` or `docs/adr/` exist, the spec speaks the project's language — the terms already defined there, not synonyms. A concept you need that the glossary lacks is a signal: either you are inventing language the project does not use, or there is a real gap worth noting. If a decision here contradicts a recorded one, say so out loud in the spec rather than overriding it silently.
 
+The same holds one level up: when `conventionsFile` is set (`phases/0-preflight.md`, step 2), the «Решения по реализации» section follows the project's conventions — its stack choices, its seams, its untouchables — and names any place it deviates, rather than deviating quietly.
+
 ## Gate G2 — before leaving this phase
 
 This is the single most valuable check in the whole flight. Everything downstream trusts the spec; this is the last moment the spec is still cheap to compare against the words the user actually said. It has two halves, and the second is the one that works.

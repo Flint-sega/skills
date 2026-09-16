@@ -59,7 +59,7 @@ A reviewer knows nothing you do not hand it — the same rule as for an executor
 | the spec sections the ticket named — the same ones the executor got | ✓ | — |
 | `interfaces.md` | ✓ | ✓ — the only way Reinvention is visible |
 | the ticket body and its acceptance criteria | ✓ | ✓ |
-| whatever the repo documents about how code is written | — | ✓ |
+| whatever the repo documents about how code is written — `conventionsFile` in `state.js` when it is set | — | ✓ |
 | **`prompts/craft-review.md`, by path** — the smells, the assertion-level testing check, the return format. The path is `skillDir` in `state.js` | — | ✓ |
 | what it must not do: repair nothing, refactor nothing, open no files outside the diff to «понять получше» | ✓ | ✓ |
 
