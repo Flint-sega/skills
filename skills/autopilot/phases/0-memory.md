@@ -18,6 +18,7 @@ The repo needs a file that tells the **next** session what this project is — `
 | nothing matched | `AGENTS.md` as the real file **+ `CLAUDE.md` containing one line: `См. @AGENTS.md`** |
 
 - **An existing file always wins over detection.** The repo has already answered the question; asking it again is how you end up with two half-filled memory files.
+- **On a configured repo the memory file is also the run's `conventionsFile`** — one file, two roles: what the next session reads first, and what this run obeys while it builds (`phases/0-preflight.md`, step 2).
 - **The pointer file is written only in the fallback case.** When the agent was identified, one file is enough — a second file is a second thing to keep in sync, and it will not be kept in sync.
 - **Never duplicate the text into both files.** Two copies of a project description drift within one run.
 - Record the choice in `state.js` as `memoryFile`, so a resume does not re-derive it.

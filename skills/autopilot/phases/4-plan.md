@@ -85,6 +85,8 @@ Write `wave` into every ticket file and into `state.js`. The dashboard groups th
 
 Phase 3 decided the boundaries: what each unit owns, what it exposes, what it hides. **Copy that section into `interfaces.md` now**, under «Границы, решённые в спецификации», together with the project rules a subagent cannot derive — stack and versions, the run and test commands, what must not be touched, and the rule that a missing dependency comes back as `BLOCKED` rather than an install.
 
+**The project rules come from `conventionsFile` in `state.js`** (`phases/0-preflight.md`, step 2). A brownfield repo's own instructions are copied here **in their own words, not paraphrased into generics** — a rule that has to survive the paraphrase before a subagent can follow it is a rule that will not survive the build.
+
 This is a copy, not a design exercise. If it turns into one, Phase 3 left the boundaries undecided and the right move is to go back and decide them — not to invent them here, where the plan is already cut around them.
 
 Why it cannot wait for ticket 01 to return: the first subagent reads this file before it writes anything, and what it reads is the only thing standing between it and inventing its own version of every boundary. A file that says nothing until the first ticket has finished means the first ticket *is* the design, chosen by whoever saw one eighth of the задача.

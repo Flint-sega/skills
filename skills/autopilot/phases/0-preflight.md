@@ -45,10 +45,12 @@ Write the directory name into `state.js` as `dir`, beside `slug`. **Everything t
 Read what is already here; assume nothing:
 
 - `git rev-parse --git-dir` — is this a repo at all?
-- `CLAUDE.md`, `AGENTS.md` at the root — does either exist?
+- `CLAUDE.md`, `AGENTS.md` at the root — does either exist? **If one does, read it now**: it is this run's conventions (below).
 - `.autopilot/` — a previous run? Then this is a **resume**, see below.
 - `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml` — is there an existing stack to respect?
 - `CONTEXT.md`, `docs/adr/` — existing domain vocabulary and decisions. If present, the spec and the tickets must use that vocabulary rather than inventing synonyms, and must flag anything that contradicts a recorded decision instead of silently overriding it.
+
+**The project's own instructions are binding input, not decoration.** A repo that already carries a project description in `CLAUDE.md`/`AGENTS.md` — brownfield, or configured by a previous flight — has answered questions this run must not re-ask: how code is written here, which commands are real, what is never touched. Read the file at this step, before Phase 1, and carry it as the run's **conventions**: they travel into the spec's «Решения по реализации», into the `interfaces.md` seed (`phases/4-plan.md`), and into the Craft reviewer's inputs (`phases/6-review.md`, which already ranks the repo's documented way above its own file). Record the file in `state.js` as `conventionsFile`; on a new repo it stays `null` until step 5 writes the memory file, and from then on the two are the same file. **A convention binds how the project's code is written — it never outranks the five rules or the gates**, and a conflict between the two is reported, not resolved silently in either direction.
 
 ## 3. Create the flight directory
 
@@ -154,7 +156,7 @@ Leaving any phase means the same two marks, here and everywhere after: the stage
 
 `.autopilot/state.js` exists with `finishedAt` still `null` → this is a resume, not a new flight. (A run that finished is the third case at the top of this file, not this one — and at tier T0 there are no tickets to be unfinished, so `finishedAt` is the only reliable test.)
 
-1. Read the project memory file first (`memoryFile` in `state.js` — `CLAUDE.md` or `AGENTS.md`), then `state.js`, `manifest.md`, `interfaces.md`. Do **not** re-read the whole dialogue; the files are the memory. The brief is `<dir>/*-brief.md` — `dir` from `state.js`, and the newest brief inside it if there is more than one.
+1. Read the project memory file first (`memoryFile` in `state.js` — `CLAUDE.md` or `AGENTS.md`; when `conventionsFile` is set and differs, that too — the run's conventions re-enter with the state, not from memory), then `state.js`, `manifest.md`, `interfaces.md`. Do **not** re-read the whole dialogue; the files are the memory. The brief is `<dir>/*-brief.md` — `dir` from `state.js`, and the newest brief inside it if there is more than one.
 2. Tell the user in one line where things stand: «Продолжаю: 7 из 12 тасков готовы, следующий — корзина».
    **Re-open the dashboard — always**, which means running **both** §1 and §3 of `phases/0-instruments.md`, not only the second: §1 is what puts `index.html` beside the dashboard, and a `.autopilot/` created before 2026-08-19 does not have one, so the pane lands on a directory listing exactly as it used to. A tab does not outlive the session that opened it, so on a resume there is never a window to preserve; assuming there is leaves the user watching nothing for the rest of the run. What *is* conditional is the server: the content check in `phases/0-instruments.md` §3 reuses the port when the interrupted session left a server on **this** directory, and raises a new one when it did not. Then point the pane at it and say the address, exactly as on a first flight.
 3. A ticket marked `in-progress` in `state.js` with no commit behind it was interrupted mid-flight. Reset it to `pending` and run it again from scratch — a half-applied ticket is worse than a fresh one.

@@ -34,7 +34,7 @@ This file is the orchestrator: modes, phase order, gates. The rules for each pha
 
 | Phase | Read | Produces |
 |---|---|---|
-| 0 Preflight | `phases/0-modes.md`, `phases/0-preflight.md`, then `0-instruments.md` and `0-memory.md` | mode announced, repo configured, `.autopilot/` created |
+| 0 Preflight | `phases/0-modes.md`, `phases/0-preflight.md`, then `0-instruments.md` and `0-memory.md` | mode announced, repo configured, conventions ingested, `.autopilot/` created |
 | 1 Manifest | `phases/1-manifest.md` | `brief.md`, `manifest.md` |
 | 2 Briefing | `phases/2-briefing.md` | answers recorded into the manifest |
 | 3 Spec | `phases/3-spec.md` | `spec.md` |
