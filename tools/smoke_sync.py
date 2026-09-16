@@ -47,7 +47,8 @@ def make_state():
     }
 
 
-def main():
+def check_standard():
+    """Базовый прогон: снимок вписан, state.js валиден после автоматики."""
     with tempfile.TemporaryDirectory() as td:
         run = pathlib.Path(td)
         shutil.copy(SKILL / "phases" / "dashboard-template.html", run / "dashboard.html")
@@ -83,6 +84,46 @@ def main():
 
     print("smoke: снимок вписан, state.js валиден")
     return 0
+
+
+def check_custom_stages():
+    """Свой набор стадий: чужие канону id ранжируются порядком из state."""
+    with tempfile.TemporaryDirectory() as td:
+        run = pathlib.Path(td)
+        shutil.copy(SKILL / "phases" / "dashboard-template.html", run / "dashboard.html")
+        shutil.copy(SKILL / "tools" / "sync.py", run / "sync.py")
+        state = make_state()
+        state["stages"] = [
+            {"id": "survey", "status": "active", "startedAt": "2026-01-01T00:00:00+00:00"},
+            {"id": "repair", "status": "active", "startedAt": "2026-01-01T01:00:00+00:00"},
+            {"id": "land", "status": "pending"},
+        ]
+        (run / "state.js").write_text(
+            "window.STATE =\n" + json.dumps(state, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8")
+        r = subprocess.run([sys.executable, str(run / "sync.py"), "--no-serve"],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            print(r.stdout + r.stderr)
+            return 1
+        raw = (run / "state.js").read_text(encoding="utf-8")
+        after = json.loads(raw.split("=", 1)[1].strip().rstrip(";"))
+        by_id = {s["id"]: s for s in after["stages"]}
+        if by_id["survey"]["status"] != "done":
+            print("ранняя своя стадия не закрылась по порядку state")
+            return 1
+        if by_id["repair"]["status"] != "active":
+            print("поздняя своя стадия закрылась ошибочно")
+            return 1
+    print("smoke: свой набор стадий ранжируется порядком state")
+    return 0
+
+
+def main():
+    rc = check_standard()
+    if rc:
+        return rc
+    return check_custom_stages()
 
 
 if __name__ == "__main__":

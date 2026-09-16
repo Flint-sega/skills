@@ -46,6 +46,10 @@ One sitting = one ordinary flight, named `<date>-program`. Phase 0 runs as alway
 5. **Land, then update the file.** The row flips to `done` only per the rule above; the PR column takes the number; «Следующий шаг» moves to what is now frontier; «Обновлено» takes today. Where the project keeps a journal, one line lands there — where it keeps one is `conventionsFile`'s to say; the sitting invents no files.
 6. **One line to the user:** «Задача 3 готова: карты доставлены — 4 из 10 в программе».
 
+**A sitting interrupted mid-flight resumes by the ordinary rules** — the run's `state.js` is the frontier (`phases/0-preflight.md`, second case). A *new* sitting on the same program is the third case: the finished run is archived, a fresh state written — **the program file is the frontier that survives both**, which is why its «Следующий шаг» moves at the end of every block and not continuously.
+
+**The program may keep its own dashboard; most don't bother** — the program file is itself the view. Where one is wanted: a state whose `stages` are the program's own phases and whose tickets are the task rows, fed through the same template — «A stage set of one's own» in `phases/7-instruments.md` carries the rules.
+
 ## Gates
 
 - **G3 per task:** the row traces to its ticket, the ticket traces to its row. A ticket nobody's row ordered is cut.

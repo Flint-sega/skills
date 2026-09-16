@@ -116,6 +116,12 @@ Eight ids, fixed, in this order: `preflight` · `manifest` · `briefing` · `spe
 - **You open stages; `sync.py` closes them.** Nothing earlier than the active stage stays `active`: the one you left is set to `done` at the moment the next one opened. Write `startedAt` on entry and nothing else — no `finishedAt` on the stage you are leaving, no second edit, no cleanup pass later.
 - **`skipped` is normal and must be visible.** Briefing in full mode, `plan` at tier T0 — a stage silently left `pending` forever reads as «сборка застряла».
 
+## A stage set of one's own
+
+The eight ids above are the build's road, and a build flight never leaves it. But the dashboard can carry a different state — a program's own view (`phases/program.md`), fed by the same template — and for that, **`stages` may carry any set, in its own order**. The rule is one line in template and in `sync.py` both: a stage list that contains an id the canon does not know, or puts familiar ids in a different order, **is its own canon** — rendered in the order it came, closed by `sync.py` by that same order. A partial canonical set (a resumed run) stays canonical and is filled out as usual.
+
+For a set of your own: ids are latin slugs the dashboard shows as-is — name them in the project's language and they read fine; a stage may carry a `weight` (default 1) for the progress bar, and everything else about stages — statuses, `note`, the closing invariant — holds unchanged.
+
 ## Tickets appear when they are cut, not when they start
 
 **The whole ticket array is written at the end of Phase 4**, every ticket `pending`, with its `blockedBy`, `wave` and `zone`. Everything the dashboard says about the build reads from that array, and an array that is still empty makes the dashboard state three things that are all false at once:
