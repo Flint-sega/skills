@@ -169,6 +169,20 @@ def serve(state):
 ORDER = ["preflight", "manifest", "briefing", "spec", "plan", "build", "review", "final"]
 
 
+def order_of(state):
+    """Порядок этапов прогона.
+
+    Свой набор — незнакомый канону id или другой порядок — сам становится
+    каноном: дашборд программы ранжируется по порядку из state, а не по
+    встроенной восьмёрке. Неполный канонический набор остаётся каноном —
+    так ведёт себя резюм, у которого стадии недописаны, а не другие."""
+    ids = [s.get("id") for s in state.get("stages") or [] if s.get("id")]
+    classic = [i for i in ORDER if i in ids]
+    if ids and (set(ids) - set(ORDER) or ids != classic):
+        return ids
+    return ORDER
+
+
 def close_passed(state):
     """Закрывает этапы, которые прогон уже прошёл. Возвращает список закрытых.
 
@@ -186,7 +200,7 @@ def close_passed(state):
     Не трогает ничего, кроме active: skipped и failed — осознанные состояния,
     и превратить их в done значило бы стереть сказанное о прогоне.
     """
-    rank = {v: i for i, v in enumerate(ORDER)}
+    rank = {v: i for i, v in enumerate(order_of(state))}
     stages = state.get("stages") or []
     live = [s for s in stages if s.get("status") == "active" and s.get("id") in rank]
     if len(live) < 2:
@@ -232,7 +246,7 @@ def audit(state):
     """
     out = []
     stages = state.get("stages") or []
-    rank = {v: i for i, v in enumerate(ORDER)}
+    rank = {v: i for i, v in enumerate(order_of(state))}
     live = [s["id"] for s in stages if s.get("status") == "active" and s.get("id") in rank]
     # Этап, до которого прогон дошёл, но который так и не отметили ни пройденным,
     # ни пропущенным: close_passed его не трогает — «пропущен» требует причины,

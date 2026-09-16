@@ -611,9 +611,14 @@ function render(lang){
     ? [Math.max(1, Math.round(cpMin*0.75)), Math.max(2, Math.round(cpMin*1.4))] : null;
 
   // Этапы: канонический порядок, поверх него — то, что прислал state.js.
+  // Свой набор — незнакомый канону id или другой порядок — сам становится каноном
+  // и показывается как есть, в порядке из state: так дашборд программы ведёт свою
+  // дорогу, не ломая дорогу сборки. Неполный канонический набор — резюм —
+  // достраивается каноном.
   const given = Array.isArray(S.stages) ? S.stages.filter(Boolean) : [];
-  const stages = STAGE_IDS.map(id => given.find(s => s.id === id) || {id, status:'pending'})
-    .concat(given.filter(s => !STAGE_IDS.includes(s.id)));
+  const own = given.some((s, i) => !STAGE_IDS.includes(s.id) || STAGE_IDS.indexOf(s.id) !== i);
+  const stages = own ? given
+    : STAGE_IDS.map(id => given.find(s => s.id === id) || {id, status:'pending'});
   const stName = s => L.stages[s.id] || s.id;
   const activeStage = stages.find(s => s.status === 'active');
   const curStage = activeStage || stages.find(s => s.status !== 'done' && s.status !== 'skipped');
@@ -627,15 +632,18 @@ function render(lang){
   // часами, подготовка минуты. Внутри разработки шкала дробится по готовым таскам, поэтому
   // она ползёт с каждым таском, а не стоит на месте полдня и потом прыгает.
   const STAGE_WEIGHT = {preflight:1, manifest:1, briefing:1, spec:2, plan:1, build:6, review:2, final:1};
+  // Свой набор стадий может нести вес каждой — поле weight; без него вес из
+  // канона, а незнакомому канону id — единица.
+  const wOf = s => s.weight ?? (STAGE_WEIGHT[s.id] ?? 1);
   const stageFrac = s => {
     if (s.status === 'done' || s.status === 'skipped') return 1;
     if (s.status !== 'active') return 0;                      // pending и failed — ноль
     if (s.id === 'build' && T.length) return Math.max(0.05, done.length / T.length);
     return 0.5;
   };
-  const totalW = stages.reduce((a,s) => a + (STAGE_WEIGHT[s.id] ?? 1), 0);
+  const totalW = stages.reduce((a,s) => a + wOf(s), 0);
   const overallPct = totalW
-    ? Math.round(stages.reduce((a,s) => a + (STAGE_WEIGHT[s.id] ?? 1) * stageFrac(s), 0) / totalW * 100) : 0;
+    ? Math.round(stages.reduce((a,s) => a + wOf(s) * stageFrac(s), 0) / totalW * 100) : 0;
   const stagesDone = stages.filter(s => s.status === 'done' || s.status === 'skipped').length;
 
   const coverage = live ? Math.round((R.done||0)/live*100) : 0;
