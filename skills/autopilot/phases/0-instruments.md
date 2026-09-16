@@ -17,7 +17,7 @@ They cannot drift apart in opposite directions, because they are not equals: `st
 
 ```bash
 A=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)/.autopilot
-TPL=$(find -L ~/.claude/skills ~/.agents/skills ~/.claude/plugins .claude/skills .agents/skills \
+TPL=$(find -L ~/.claude/skills ~/.agents/skills ~/.zcode/skills ~/.claude/plugins .claude/skills .agents/skills \
         -maxdepth 6 -name dashboard-template.html 2>/dev/null | head -1)
 [ -n "$TPL" ] && TPL=$(cd "$(dirname "$TPL")" && pwd -P)/dashboard-template.html
 echo "skillDir = ${TPL%/phases/*}"
@@ -29,7 +29,7 @@ cp "${TPL%/phases/*}/tools/sync.py" "$A/sync.py"
 
 **`find -L`, and no `*` anywhere in it** — both measured on 2026-08-17. Skills are installed as symlinks (`~/.claude/skills/autopilot` → `~/.agents/skills/autopilot`) and a plain `find` will not follow one, so it reports nothing while the file sits right there; a `plugins/*/` glob is worse still, because in zsh an unmatched glob aborts the command before it runs — and the same line works in bash, which is what makes it hard to notice.
 
-Empty output means the skill lives somewhere none of those five roots cover: widen the search once, by hand, and carry on. Never regenerate the template, never read it into context, never edit it after the copy.
+Empty output means the skill lives somewhere none of those six roots cover: widen the search once, by hand, and carry on. Never regenerate the template, never read it into context, never edit it after the copy.
 
 **`index.html` is not a second dashboard — it is the name under which the server hands the same file out at `/`.** Without it `python3 -m http.server` answers the directory with a *listing*, and the pane in §3 can only be pointed at an origin, never at a path: one dropped navigation and the user spends the run reading file names (measured 2026-08-18). A symlink, not a copy — a copy is a second dashboard that ages; if `ln` refuses, §3 still navigates to `/dashboard.html`.
 
@@ -52,6 +52,7 @@ window.STATE =
   "mode": "semi",
   "depth": "normal",
   "polish": null,
+  "execution": "parallel",
   "tier": null,
   "briefFile": "2026-08-07-brief.md",
   "memoryFile": "AGENTS.md",
@@ -95,7 +96,7 @@ Three of those fields exist because the orchestrator's context does not survive 
 
 **All eight stages are listed from the first minute**, the seven unreached ones as `pending`. That is what makes the dashboard show the whole road instead of a blank page — the template renders every stage it is given and nothing it is not.
 
-`tier` is `null` until Phase 4 decides it. `polish` stays `null` unless the доводка parameter was requested — see `phases/polish.md`, and do not add the block here on speculation.
+`tier` is `null` until Phase 4 decides it. `polish` stays `null` unless the доводка parameter was requested — see `phases/polish.md`, and do not add the block here on speculation. `execution` is `parallel` unless the `serial` parameter was requested — the rules are in `phases/0-modes.md`, and the field exists so that a resume or a compaction does not re-derive it.
 
 **Never put a secret value in here.** `emptyEnv` holds names only — the whole point of the list.
 
@@ -127,11 +128,11 @@ python3 "$ROOT/.autopilot/sync.py"      # снимок в страницу + с�
 
 **When it cannot raise a server it says so and names the file, and that is not a failure any more.** The page carries its snapshot, so a run with no server is a dashboard that shows the truth and does not tick — the user opens the file and sees where the build is. Carry on; do not retry, do not install anything.
 
-`sync.py` returns immediately — the server it raises is detached, so nothing blocks the build. Then open the pane at the address it printed and go to `/dashboard.html`. In Claude Code that is `preview_start({url: "http://localhost:PORT"})` followed by a `navigate` to `/dashboard.html`: a bare `navigate` to a localhost port **without** `preview_start` first is refused by pane policy, and `127.0.0.1` in the URL is refused where `localhost` is accepted.
+`sync.py` returns immediately — the server it raises is detached, so nothing blocks the build. Then open the pane at the address it printed and go to `/dashboard.html`. How is the harness's business and only its: in Claude Code that is `preview_start({url: "http://localhost:PORT"})` followed by a `navigate` to `/dashboard.html` — a bare `navigate` without `preview_start` first is refused by pane policy, and `127.0.0.1` in the URL is refused where `localhost` is. A harness with a differently named preview tool works the same way — start the viewer at the origin, then land it on `/dashboard.html`; one with no viewer tool at all is Path B, not a failure.
 
 **The `navigate` is the second half of one move.** The pane must end on `/dashboard.html` — that is the address the user copies out of it. **Always re-point it**, on a resume and on a second flight in the same repo too: a pane left over shows the old flight, and on a re-used port the page it holds has already stopped polling (`finishedAt` freezes it — `phases/8-final.md`), so a live server sits behind a screen full of green. Then glance at what it shows — a stage list and a running clock, not a file listing and not another project's title.
 
-**If `preview_start` is not in your tool list, look for it before concluding there is no pane** — in some sessions the browser tools load on demand, and «no viewer here» sends a run to Path B on a machine that had one.
+**Before concluding there is no pane, look for one** — the viewer tool is named differently in every harness, and in some sessions the browser tools load on demand; «no viewer here» sends a run to Path B on a machine that had one.
 
 **Say the address in the chat as well, on Path A too.** How the client presents the pane varies — sometimes it opens beside the chat, sometimes the same call comes back as a card with an «Open» button and nothing on screen until it is pressed (seen in Claude Desktop on 2026-08-19). You cannot tell which from the tool's own answer, and it is not worth a second call to find out: one printed line covers both, keeps the user independent of a button, and lets them keep the dashboard in a real browser window beside the chat.
 
@@ -151,7 +152,7 @@ A real browser opens `file://` as a page and lets it load `state.js` from the sa
 
 - **Opened exactly once per flight.** Both paths keep themselves current. Within one flight neither ever opens a second window or tab.
 - **A new feature in a configured repo is a new flight** (`phases/0-preflight.md`, third case): archive, write the fresh `state.js`, *then* open. Reversed, the user is shown the run that already shipped — all green, last project's title — and nothing on screen says otherwise.
-- **On a resume the pane is always re-pointed; only the *server* is conditionally reused.** The two used to be one rule, which read as «do not open it again if a window is already open» — never true on a resume, since a tab does not outlive its session, and the returning user got no dashboard at all. Run §1, run the block above, then `preview_start` + `navigate` exactly as on a first flight.
+- **On a resume the pane is always re-pointed; only the *server* is conditionally reused.** The two used to be one rule, which read as «do not open it again if a window is already open» — never true on a resume, since a tab does not outlive its session, and the returning user got no dashboard at all. Run §1, run the block above, then open the pane at the address exactly as on a first flight.
 - **A live server here plus a `state.js` written in the last five minutes is the run going on in another window** — `phases/0-preflight.md`, fourth case. Say what you see and ask which window carries on; one mark without the other is an ordinary resume.
 - **A failure is not an error.** Headless machine, no default browser, no pane — print the path in one line and carry on. Do not retry, do not install anything, do not try a second launcher.
 - **Do not open it in a remote session.** If `$SSH_CONNECTION` or `$CI` is set, skip opening entirely and print the path — a browser window on someone else's machine helps nobody, and neither does a port.
@@ -187,6 +188,7 @@ This is here because on 2026-08-19 `spec` stayed `active` for two and a half hou
 **Skipping `sync.py` degrades, it does not break.** The page on http is fed by `state.js` either way; what goes stale is only what the page shows to someone who opens the file with no server behind it. So if a stretch of the build is one edit after another, syncing on the stage transition rather than on every single row is a judgement call you are allowed to make — but end every phase synced.
 
 - **Anchor every edit on the `"id"` line above the field you are changing.** `"status": "pending"` appears once per stage and once per ticket, and at the moment the file is created `updatedAt`, the run's `startedAt` and `stages[0].startedAt` are three identical lines. An edit anchored on the field alone matches the wrong row or refuses to match at all — and `replace_all` here rewrites every ticket in one stroke, so it is never the answer. Not matching means the file moved since you last read it: re-read `state.js` and redo the edit against what is actually there.
+- **From a script, `state.js` is JSON and nothing else.** A change made programmatically loads the file, mutates the parsed object and writes it back — `python3` reading `json`, changing a field, dumping with `indent=2` under the unchanged `window.STATE =` head. String surgery on the text — sed, awk, a regex replace, even a well-meant Python one-liner — is how a half-matched row becomes a file `sync.py` refuses to parse: it will name the line, but the tickets and timings it corrupted are already gone. The anchored row edit above is the only text-level edit there is.
 - **`startedAt` on a ticket is that ticket's own launch time** — not the run's, not the build stage's. Copying the run's `startedAt` into a ticket is the one mistake that looks harmless and makes every per-ticket duration on the dashboard wrong from the first row.
 - **`startedAt` goes in when the thing starts, not when it ends.** An interval with a start and no end is what makes the timer run; filling both in at the end means the user watched a frozen clock while the work was happening.
 - **`updatedAt` moves on every write.** The dashboard shows «обновлено N назад» from it and turns the line warning-coloured when the silence runs long — that is the user's only way to tell «идёт работа» from «агент умер». The template knows that a ticket in flight means no writes for tens of minutes and holds the warning back until three quarters of an hour; between tickets it goes back to five. So the warning means what it says, and you do not need to invent keep-alive writes to silence it.
