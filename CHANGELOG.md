@@ -15,8 +15,10 @@ npx skills update foreman -g
 Ядро взято из autopilot 2.0; поверх — слои форка: имя и команда `/foreman`,
 глаголы `program` / `verify` / `incident` / `docs`, обязывающий ингест конвенций
 проекта (`conventionsFile`), диал `serial`, набор стадий дашборда из state
-(порядок ранжирования в `ap.py` — из state), ZCode-корни поиска и генерик-панель,
-rich-триггеры в description, CI с тестами и сканером секретов.
+(порядок ранжирования в `ap.py` — из state; `ap.py stage` принимает и свои
+латинские слаги), ZCode-корни поиска и генерик-панель, rich-триггеры в
+description, CI с тестами и сканером секретов. Выключатель чека обновлений
+здесь — `FOREMAN_NO_UPDATE_CHECK=1` (в апстриме был `AUTOPILOT_NO_UPDATE_CHECK`).
 
 ## 2.0.0 — 2026-10-01
 

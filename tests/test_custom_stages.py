@@ -8,11 +8,12 @@ foreman: stage set программы (чужие канону id) закрыв�
 
 import importlib.util
 import os
+import pathlib
 import tempfile
 import unittest
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-AP_PATH = os.path.join(os.path.dirname(HERE), "skills", "foreman", "tools", "ap.py")
+REPO = pathlib.Path(__file__).resolve().parents[1]
+AP_PATH = str(REPO / "skills" / "foreman" / "tools" / "ap.py")
 _spec = importlib.util.spec_from_file_location("ap", AP_PATH)
 ap = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ap)

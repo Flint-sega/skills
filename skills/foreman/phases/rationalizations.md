@@ -51,7 +51,7 @@
 - A diff or a raw test log read into the orchestrator's context.
 - A дозапрос carrying more than the reviewer's `BLOCKING` lines.
 - A reviewer kept alive across tickets, or a ticket marked `Ревью: да` committed without its review.
-- Parallel executors on the same files — or independent tickets flown one at a time.
+- Parallel executors on the same files — or independent tickets flown one at a time with `execution` unset (with `execution: "serial"` one at a time **is** the flight; the flag in `state.js` is the difference).
 - A subagent launched without `interfaces.md` or `prompts/executor.md`, or finishing without the contract block.
 - A secret asked for, repeated back, or written anywhere.
 - A dependency the spec never decided on installed without the decision being made, or anything installed outside the project — global tools, system packages.

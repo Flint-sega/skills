@@ -48,7 +48,7 @@ One sitting = one ordinary flight, named `<date>-program`. Phase 0 runs as alway
 
 **A sitting interrupted mid-flight resumes by the ordinary rules** — the run's `state.js` is the frontier (`phases/0-resume.md`). A *new* sitting on the same program is the «new feature in a configured repo» case: `init` archives the finished run's state, a fresh one is written — **the program file is the frontier that survives both**, which is why its «Следующий шаг» moves at the end of every block and not continuously.
 
-**The program may keep its own dashboard; most don't bother** — the program file is itself the view. Where one is wanted: a state whose `stages` are the program's own phases and whose tickets are the task rows, fed through the same template. A stage set of one's own is its own canon — `ap.py` ranks, closes and audits by the order the state carries, and the template renders it as it came.
+**The program may keep its own dashboard; most don't bother** — the program file is itself the view. Where one is wanted: a state whose `stages` are the program's own phases and whose tickets are the task rows, fed through the same template. `ap.py stage <slug>` accepts any latin slug beside the canonical eight — a stage set of one's own becomes its own canon: `ap.py` ranks, closes and audits by the order the state carries, and the template renders it as it came.
 
 ## Gates
 

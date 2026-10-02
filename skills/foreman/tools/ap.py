@@ -712,8 +712,9 @@ def cmd_stage(state, pos, opt):
     if not pos:
         die("stage <id> [done|skip|fail] [--note …]")
     sid, action = pos[0], (pos[1] if len(pos) > 1 else "start")
-    if sid not in ORDER:
-        die("этапы: " + ", ".join(ORDER))
+    if sid not in ORDER and not re.fullmatch(r"[a-z][a-z0-9-]{1,30}", sid):
+        die("этап — канонический id (%s) или латинский слаг своей дорожки"
+            % ", ".join(ORDER))
     s = stage(state, sid)
     t = now()
     if action == "start":
