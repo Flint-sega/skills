@@ -1,66 +1,37 @@
-# Phase 0 — Modes, depth and finish
+# Phase 0 — Mode and depth
 
-**Read this in Phase 0, together with `phases/0-preflight.md`, before anything is announced to the user.** Everything here is decided once, at the start, and never again: the parameters come out of what the user typed, the resolved settings are announced in one block, and the rest of the run only ever *applies* them. That is why it is not in `SKILL.md` — nine phases would otherwise carry the argument for why there are four modes instead of three.
+Read in Phase 0 with `phases/0-preflight.md`. Both dials are decided once, from what the user typed, announced in one block, and only *applied* from then on.
 
-`SKILL.md` keeps the one-line map of which cell each mode changes (`The flight`); the rules for filling those cells are here.
+Everything after `/foreman` splits into **the mode** (`full`, `semi`, `interview`, `manual`), **the depth** (`strict`, `deep`) and **the brief** — everything else. Bare words, any order, both optional; anything unrecognised is brief. `/foreman full deep интернет-магазин керамики` — full mode, deep elaboration.
 
-## Modes
-
-Everything typed after `/foreman` splits into five parts: **the mode** (optional bare word — `full`, `semi`, `interview`, `manual`), **the depth** (optional bare word — `strict`, `deep`), **the finish** (optional bare word — `polish`), **the execution** (optional bare word — `serial`), and **the brief** (everything else). No dashes on any parameter. Text that is not a recognised parameter is always brief.
-
-`/foreman full deep интернет-магазин керамики` — full mode, deep elaboration. Order does not matter; all four parameters are optional and independent.
+## Mode — how much the user is asked
 
 | Mode | Triggers | Human gates |
 |---|---|---|
-| **full** — полный автомат | `/foreman full`, «полный автомат», «полностью сам», «ничего не спрашивай», "fully automatic", "don't ask me anything" | none |
-| **semi** — полуавтомат **(default)** | `/foreman semi`, «полуавтомат», nothing specified | questions, on genuine forks only |
-| **interview** — режим интервью | `/foreman interview`, «режим интервью», «погриль меня», «допроси», «задай все вопросы», «разбери задачу со мной», "grill me", "interview me", "ask me everything" | questions, all of them |
-| **manual** — ручной | `/foreman manual`, «ручной режим», «согласовывай каждый шаг», "approve every step" | the same questions + spec + tickets |
+| **full** — полный автомат | `full`, «полный автомат», «полностью сам», «ничего не спрашивай», "fully automatic", "don't ask me anything" | none |
+| **semi** — полуавтомат **(default)** | `semi`, «полуавтомат», nothing said | questions, on genuine forks only |
+| **interview** — режим интервью | `interview`, «режим интервью», «погриль меня», «допроси», «задай все вопросы», «разбери задачу со мной», "interview me", "ask me everything" | questions, all of them |
+| **manual** — ручной | `manual`, «ручной режим», «согласовывай каждый шаг», "approve every step" | the same questions + the spec + the tickets |
 
-A mode decides two separate things — how much the user is asked about the *product*, and how much of the *process* they approve — and wanting one without the other is the ordinary case. `interview` is that case; `manual` is `interview` plus the two artifact gates, and nothing else.
+`interview` asks about the *product*; `manual` is `interview` plus approval of the two *process* artifacts, and nothing else.
 
-- **Announce the resolved mode and offer the others, once, before Phase 1.** The user must never discover the mode by noticing questions that did or did not arrive — and they cannot ask for a mode they do not know exists. In a chat client there is no `--help` to read: this block is the only place the dials are ever named, so it is not optional.
+- **Ambiguity resolves to semi.** A mode word contradicting the rest of the sentence → the mode word wins; two mode words → ask which, in one line.
+- **Switchable mid-run** («переключись в ручной») — applies from the next phase; one line of acknowledgement, nothing replayed.
+- **Instructions in the brief** — stack, budget, «без базы данных», a deadline — are requirements in the manifest. They constrain the build; they never replace a phase.
+- **No mode removes the manifest gates or the safety gates.** Deploy, publish, pay, message a third party, delete data, rewrite history — a question in all four modes, full included.
 
-  ```
-  Режим: полуавтомат · глубина: обычная — спрошу только то, что в задаче не определено, дальше соберу сам.
-  Дашборд открыл — обновляется сам: http://localhost:PORT/dashboard.html
-  Память проекта — AGENTS.md (+ CLAUDE.md со ссылкой). Скажи, если нужен другой.
-
-  Можно переключить в любой момент, просто скажи:
-  • «полный автомат» — не спрашиваю вообще ничего
-  • «погриль меня» — разберу задачу вопросами до конца, дальше соберу сам
-  • «ручной режим» — то же плюс согласуешь спецификацию и список тасков
-  • «строго по брифу» / «проработай глубоко» — меньше или больше проработки сверх сказанного
-  • «вылижи» — в конце сравню с эталоном и доведу; дольше и дороже
-  • «по одному» — субагенты строго по очереди, если параллельные сессии падают
-  ```
-
-  With `polish` on, the first line names it and its ceiling: «Режим: полуавтомат · глубина: обычная · доводка: до трёх кругов».
-
-  **The dashboard line carries the address whenever there is one** (`phases/0-instruments.md` §3, Path A). Depending on the client the page may open beside the chat or arrive as a card with an «Open» button, and in the second case this line is the only way to the dashboard that does not depend on finding the button. Without a server (Path B) the line names the file instead: «Дашборд открыл — `.autopilot/dashboard.html`, обновляется сам.»
-
-  One short block, once, at the start. **It is a hint, not a question** — say it and go straight into Phase 1; waiting for a reply to it is exactly the pause this skill exists to remove. Do not repeat it later, do not restate it after a mid-run switch (one line is enough there: «Понял, дальше ручной режим»).
-- **Ambiguity resolves to semi.** A mode word contradicting the rest of the sentence («ручной режим, но не спрашивай») → the explicit mode word wins; two mode words → ask which one, in one line.
-- **The mode can be switched mid-run** («переключись в ручной») — it applies from the next phase onward. Phases already passed are not replayed.
-- **Extra instructions in the brief** (stack, language, budget, «без базы данных», deadline) are manifest requirements like any other. They constrain the build; they never replace a phase.
-- **No mode removes the manifest gates or the safety gates.** Irreversible or outward-facing actions — deploy, publish, pay, send messages to third parties, delete data, rewrite git history — stay a question in **all four** modes, including full.
-
-## Depth
-
-How far past the brief's own words the spec is allowed to go. The mode decides *how much the user is asked*; depth decides *how much is worked out for them*. They are independent.
+## Depth — how much is worked out for the user
 
 | Depth | Triggers | Deepening a requirement (`R##.n`) | New capabilities (`A##`) |
 |---|---|---|---|
-| **strict** | `/foreman strict`, «строго по брифу», «только то, что сказал», «ничего не добавляй», "strictly as written", "nothing extra" | only what the requirement cannot work without | **not allowed** |
-| **normal** **(default)** | nothing specified | freely, by judgement — as much as the feature warrants | allowed, with a parent, within proportion |
-| **deep** | `/foreman deep`, «проработай глубоко», «максимальная глубина», «продумай за меня», "go deep", "think it through" | the full depth pass, every dimension, every requirement | actively encouraged, same two limits |
+| **strict** | `strict`, «строго по брифу», «только то, что сказал», «ничего не добавляй», "strictly as written" | only what the requirement cannot work without | **not allowed** |
+| **normal** **(default)** | nothing said | by judgement, where it plainly helps | allowed, with a parent, within proportion |
+| **deep** | `deep`, «проработай глубоко», «продумай за меня», "go deep", "think it through" | every dimension of every requirement | encouraged, same limits |
 
-- **Default is normal, and normal means permitted.** The agent elaborates where elaboration obviously helps and does not chase every edge of every requirement. This is the setting most briefs should run on.
-- **`strict` does not mean careless.** Errors and empty states are still handled — a build that crashes on bad input does not satisfy the requirement it was written for. What `strict` removes is anything the user did not ask for: no extra capabilities, no anticipating needs, no "пока я тут, добавлю".
-- **`deep` does not lift the attachment rules.** Every `A##` still names its parent requirement; the proportion limit still holds. `deep` buys thoroughness, never a different project.
-- **`deep` also turns on the adversarial pass** — the premortem over the brief in `phases/2-briefing.md`, which asks where the idea itself comes apart rather than where a requirement is underspecified. It runs at `deep` in **every** mode, and in `interview` and `manual` at every depth, because taking the задачу apart is what those modes are for. The mode then decides what happens to what it finds: a question, or an `ASSUMPTION` decided for the user.
-- **Depth is announced with the mode**, in the same opening block: «Режим: полуавтомат · глубина: максимальная».
-- **Depth can be changed mid-run** («поменьше отсебятины», «продумай глубже») — applies from the next phase. Already-written spec sections are not retroactively trimmed unless the user asks.
+- `strict` does not mean careless: errors and empty states are still handled; what goes is anything not asked for.
+- `deep` never lifts the attachment rules — every `A##` names its parent, the proportion holds.
+- **The adversarial pass** (`phases/2-adversarial.md`) runs at `deep` in every mode, and in `interview` and `manual` at every depth.
+- Changeable mid-run («поменьше отсебятины», «продумай глубже») — from the next phase; written spec sections are not retroactively trimmed unless asked.
 
 The rules for each level live in `phases/3-spec.md`.
 
@@ -70,25 +41,28 @@ Parallel-by-default is a claim about the *harness*, not about the work: subagent
 
 | | Triggers | What it changes |
 |---|---|---|
-| **serial** | `/foreman serial`, «по одному», «по очереди», «не параллельно», «строго последовательно», "one at a time", "serially" | how waves are launched — everything else about them holds |
+| **serial** | `serial`, «по одному», «по очереди», «не параллельно», «строго последовательно», "one at a time", "serially" | how waves are launched — everything else about them holds |
 
 - **The wave still exists.** It is the dependency frontier and Phase 4 still cuts it; what changes is the launch: one ticket at a time, the next out when the previous returns. The rule itself lives where the launches happen — `phases/5-subagents.md`.
 - **Switching it on mid-run is the ordinary use.** The provider starts dropping parallel sessions → «по одному» in one line, `execution` flips to `serial` in `state.js`, and every flight after that goes out alone. A provider that has recovered does not un-flap the run: leave it serial unless the user asks.
 - **Announced with the mode when set at the start** — «Режим: полуавтомат · глубина: обычная · запуск: по одному» — and recorded in `state.js` as `execution`, so a resume does not re-derive it.
 
-## Polish — доводка
+## The opening block
 
-**Off by default.** One bare word turns it on, and it is the only parameter that costs the user real money and real time rather than just attention.
+Once, before Phase 1, together with the dashboard and the memory file. **A hint, not a question** — say it and go; in a chat there is no `--help`, so this is the only place the user learns the dials exist.
 
-| | Triggers | What it adds |
-|---|---|---|
-| **polish** | `/foreman polish`, «вылижи», «доведи до идеала», «сравни с эталоном», «не останавливайся, пока не будет как надо», «бюджет не важен, важен результат» | after the blind acceptance, up to three rounds of comparing the running build against the user's own reference and fixing the differences |
+```
+Режим: полуавтомат · глубина: обычная — спрошу только то, что в задаче не определено, дальше соберу сам.
+Дашборд открыл — обновляется сам: http://localhost:PORT/dashboard.html
+Память проекта — AGENTS.md (+ CLAUDE.md со ссылкой).
+↑ Вышла версия Foreman 2.1.0 (у тебя 2.0.0): npx skills update foreman -g   ← только если init её напечатал
 
-It is a separate dial because depth decides how much is worked out *before* the code exists and polish how much is corrected *after*: a `strict` brief can deserve a flawless finish, and a `deep` spec can be right the first time.
+Можно переключить в любой момент, просто скажи:
+• «полный автомат» — не спрашиваю вообще ничего
+• «режим интервью» — разберу задачу вопросами до конца, дальше соберу сам
+• «ручной режим» — то же плюс согласуешь спецификацию и список тасков
+• «строго по брифу» / «проработай глубоко» — меньше или больше проработки сверх сказанного
+• «по одному» — субагенты строго по очереди, если параллельные сессии падают
+```
 
-Two things are decided here; everything else — the critic's prompt, the filter, the stop conditions, the bookkeeping — is in `phases/polish.md`, **read only when the parameter is on.**
-
-- **It measures against a reference, never against taste.** No `reference.md` with something comparable in it → the loop says so in one line and does not run. A critic with nothing to compare against invents a standard, and the run then pays for chasing it.
-- **Its findings become tickets**, cut and flown and reviewed and committed like any others. Nothing about доводка bypasses Phase 6 or the green suite; it is more work of the same kind, not a different kind of work.
-
-Announced with the mode and depth in the opening block, ceiling named: «доводка: до трёх кругов».
+No server → the dashboard line names the file: «Дашборд открыл — `.autopilot/dashboard.html`, обновляется сам.» Never repeated later; a mid-run switch gets one line: «Понял, дальше ручной режим».
