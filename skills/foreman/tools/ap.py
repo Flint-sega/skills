@@ -378,6 +378,13 @@ def audit(state):
             if s.get("status") == "pending" and rank.get(s.get("id"), 99) < max(live):
                 out.append("этап %s пропущен в учёте: был — `stage %s done`, не было — `stage %s skip "
                            "--note причина`. Это бухгалтерия, не расследуй" % ((s["id"],) * 3))
+    # Предупреждаем, только когда этап манифеста уже пройден: до него файла нет
+    # по определению, и «не читается» — не аномалия, а план прогона.
+    passed_manifest = any(s.get("id") == "manifest" and s.get("status") in ("done", "skipped", "failed")
+                          for s in stages)
+    if passed_manifest and manifest_rows(state) is None and state.get("dir"):
+        out.append("манифест %s/manifest.md не читается — счётчики требований могли устареть; "
+                   "проверь `dir` в state.js и файл на диске" % state["dir"])
     return out
 
 
@@ -805,7 +812,8 @@ def cmd_set(state, pos):
 def cmd_add(state, pos):
     if len(pos) < 2 or pos[0] not in LISTS:
         die("add <%s> \"текст\"" % "|".join(sorted(LISTS)))
-    key, vals = pos[0], pos[1:]
+    key = pos[0]
+    vals = [v for v in pos[1:] if v != key]
     if key.startswith("debt."):
         tgt = state.setdefault("debt", {}).setdefault(key[5:], [])
     else:

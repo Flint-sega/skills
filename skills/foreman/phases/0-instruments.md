@@ -31,7 +31,7 @@ python3 .autopilot/ap.py init --slug telegram-repair-bot --title "Телегра
   --skill-dir "<skillDir>" --check-update
 ```
 
-It creates the run directory `<YYYY-MM-DD>-<slug>--wip/` with `tickets/` inside, writes `state.js` with all eight stages (`preflight` active), adds the run's row to `.autopilot/README.md` (writing the file on a new repo), puts `.autopilot/serve.*` into `.gitignore`, raises the server and prints its address. A finished run's `state.js` is archived into that run's directory first; an unfinished one means this is a resume, and `init` refuses (`phases/0-resume.md`).
+It creates the run directory `<YYYY-MM-DD>-<slug>--wip/` with `tickets/` inside, writes `state.js` with all eight stages (`preflight` active), adds the run's row to `.autopilot/README.md` (writing the file on a new repo), puts `.autopilot/serve.*` into `.gitignore`, raises the server and prints its address. A finished run's `state.js` is archived into that run's directory first; an unfinished one means this is a resume, and `init` refuses (`phases/0-resume.md`). `--brief-file <имя>` names the brief when the flight starts from an existing file — otherwise `set briefFile=<имя>` after Phase 1 writes it.
 
 A line starting with **`↑`** means a newer Foreman is out: put it into the opening block as it is — one line, not a question, never an update mid-run.
 
@@ -59,6 +59,7 @@ Immediately after `init`, before Phase 1 asks anything.
 | entering a phase | `stage <id>` — the stage before it closes itself |
 | a phase consciously not run | `stage <id> skip --note "причина"` |
 | tier decided | `set tier=T2` |
+| serial execution asked | `set execution=serial` (`phases/0-modes.md`); conventions bound | `set conventionsFile=AGENTS.md` (`phases/0-preflight.md` §3) |
 | ticket files written | `tickets` — publishes every ticket; manifest rows `in-spec` → `in-ticket` |
 | gate G3 | `check-plan` |
 | the plan commit is made | `set baseCommit=<sha>` — chained with it (`phases/4-plan.md`) |

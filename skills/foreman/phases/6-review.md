@@ -5,7 +5,7 @@ Two moments, both done by someone who did not write the code:
 - **Point review during the build** — for tickets whose file says `Ревью: да` (the foundation and the risky ones, `phases/4-plan.md`), and for a ticket whose contract reports one of its own requirements as not done — before the commit. At T0 there is none: the whole-branch review is that ticket's review.
 - **The whole-branch review** — once, after the last ticket, as the `review` stage.
 
-Every other ticket is committed on a green check and reviewed as part of the branch. Why this shape, with the measurements behind it: `docs/autopilot/design.md` in the skill's repository (upstream's design notes, kept under their name).
+Every other ticket is committed on a green check and reviewed as part of the branch. Why this shape, with the measurements behind it: `docs/autopilot/design.md` — at the **repository root**, not inside the skill directory, so a symlinked install reaches it through the clone, not through `skillDir` (upstream's design notes, kept under their name).
 
 ## Three axes, reported separately
 
