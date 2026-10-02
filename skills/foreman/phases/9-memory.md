@@ -16,7 +16,7 @@ Everything in the memory file must be true of the repository as it stands — no
 
 `memoryOwner` in `state.js` decides everything below.
 
-- **`autopilot`** — its content lives between `<!-- autopilot:start -->` and `<!-- autopilot:end -->`, and updating means replacing what is between them. Text outside the markers is the user's and is never touched. Markers missing but Foreman's sections recognisably there → wrap them, do not append a second copy.
+- **`foreman`** — its content lives between `<!-- autopilot:start -->` and `<!-- autopilot:end -->`, and updating means replacing what is between them. Text outside the markers is the user's and is never touched. Markers missing but Foreman's sections recognisably there → wrap them, do not append a second copy. (A run of the upstream autopilot wrote the same markers with `memoryOwner: autopilot` — treat that value as `foreman`: same markers, same rules.)
 - **`user`** — nothing is written into the file during the run. Moments 2 and 3 produce `.autopilot/<dir>/memory-proposal.md` instead, and the file changes only on the user's word.
 
 ## Moment 2 — during the build

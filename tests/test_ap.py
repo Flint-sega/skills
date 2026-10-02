@@ -59,7 +59,7 @@ class Run(unittest.TestCase):
         return subprocess.run(["git", "-C", self.root] + list(args), capture_output=True, text=True)
 
     def ap(self, *args):
-        env = dict(os.environ, AUTOPILOT_NO_UPDATE_CHECK="1")
+        env = dict(os.environ, FOREMAN_NO_UPDATE_CHECK="1")
         r = subprocess.run([sys.executable, os.path.join(self.a, "ap.py")] + list(args) + ["--no-serve"],
                            capture_output=True, text=True, env=env, cwd=self.root)
         return r.returncode, r.stdout
@@ -97,6 +97,18 @@ class Run(unittest.TestCase):
         self.assertIn("в работе", read(os.path.join(self.a, "README.md")))
         self.assertIn(".autopilot/serve.*", read(os.path.join(self.root, ".gitignore")))
         self.assertIn("window.STATE={", read(os.path.join(self.a, "dashboard.html")))
+
+    def test_stage_accepts_foreign_slug_and_rejects_junk(self):
+        """Свой набор стадий: латинский слаг принимается, мусор — нет."""
+        self.init()
+        code, out = self.ap("stage", "survey")
+        self.assertEqual(code, 0, out)
+        s = self.state()
+        by_id = {x["id"]: x for x in s["stages"]}
+        self.assertEqual(by_id["survey"]["status"], "active")
+        code, out = self.ap("stage", "junk id!")
+        self.assertNotEqual(code, 0)
+        self.assertIn("слаг", out)
 
     def test_init_refuses_on_live_run(self):
         self.init()
