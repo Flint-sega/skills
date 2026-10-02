@@ -8,7 +8,7 @@ A **brief in the user's own words** — a path given with the verb, the open run
 
 ## The mechanics — Phase 8's blind acceptance, unchanged
 
-`phases/8-final.md` §1 is the source; what follows is the same check pointed at an arbitrary result.
+The blind checker of `phases/8-final.md` is the source; what follows is the same check pointed at an arbitrary result.
 
 Spawn one subagent that receives exactly:
 
