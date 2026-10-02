@@ -14,7 +14,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Синтаксис Python
-        run: python -m py_compile tools/*.py skills/foreman/tools/ap.py
+        run: python -m py_compile tools/*.py skills/foreman/tools/ap.py tests/*.py
+      - name: Frontmatter SKILL.md
+        run: |
+          pip install -q pyyaml
+          python tools/check_frontmatter.py
       - name: Тесты ap.py
         run: python -m unittest discover -s tests -v
       - name: JS дашборда разбирается

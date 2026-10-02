@@ -1,6 +1,17 @@
 ---
 name: foreman
-description: Use when the user dictates an app, site, bot, or feature to build end-to-end and expects a finished result without reviewing specs, tickets, or code — vibecoding sessions, non-technical users, "собери под ключ", "build it for me", "не задавай лишних вопросов" requests. Also use when the user invokes /foreman, or asks for a build in a named mode, depth or finish — «полный автомат», «режим интервью», «погриль меня», «ручной режим», «строго по брифу», «проработай глубоко». Also for the verb forms: «продолжи программу», «выполни задачи из STATE.md», /program; «проверь что получилось», «прими результат», /verify; «сломалось», «инцидент», «разбери поломку», /incident; «опиши проект», «обнови документацию», «перепиши README», /docs.
+description: >-
+  Use when the user dictates an app, site, bot, or feature to build end-to-end
+  and expects a finished result without reviewing specs, tickets, or code —
+  vibecoding sessions, non-technical users, "собери под ключ", "build it for
+  me", "не задавай лишних вопросов" requests. Also use when the user invokes
+  /foreman, or asks for a build in a named mode, depth or finish — «полный
+  автомат», «режим интервью», «погриль меня», «ручной режим», «строго по
+  брифу», «проработай глубоко». Also for the verb forms — «продолжи
+  программу», «выполни задачи из STATE.md» (/program); «проверь что
+  получилось», «прими результат» (/verify); «сломалось», «инцидент», «разбери
+  поломку» (/incident); «опиши проект», «обнови документацию», «перепиши
+  README» (/docs).
 argument-hint: "[build|program|verify|incident|docs] [full|semi|interview|manual] [strict|deep] [serial] что нужно построить, путь к brief.md или файл программы"
 metadata:
   version: "2.0.0-foreman.1"
