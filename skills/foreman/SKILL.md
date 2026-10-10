@@ -14,7 +14,7 @@ description: >-
   README» (/docs).
 argument-hint: "[build|program|verify|incident|docs] [full|semi|interview|manual] [strict|deep] [serial] что нужно построить, путь к brief.md или файл программы"
 metadata:
-  version: "2.0.1-foreman.4"
+  version: "2.0.1-foreman.5"
 ---
 
 # Foreman

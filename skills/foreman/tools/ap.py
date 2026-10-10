@@ -24,11 +24,15 @@
     python3 .autopilot/ap.py tests 34/0                 # последний полный прогон
     python3 .autopilot/ap.py finish --result "Бот принимает заявки и пишет их в таблицу"
     python3 .autopilot/ap.py reopen                     # второй бриф в сданном прогоне
+    python3 .autopilot/ap.py ask briefing --note "три вопроса в чате"   # ждём пользователя
+    python3 .autopilot/ap.py answered                   # пользователь ответил
     python3 .autopilot/ap.py                            # просто синхронизировать
 
 После каждой команды: updatedAt = сейчас (и метка в журнале beats), счётчики требований — из manifest.md,
 пройденные этапы закрыты, снимок вписан в dashboard.html, сервер жив. Время
 ставит сам скрипт, с секундами и поясом, — агент его не пишет никогда.
+Ожидание пользователя (ask … answered) в рабочее время не входит: часы дашборда
+его не считают, это не работа сборки.
 
 Флаги: --check-update (сверить версию навыка с GitHub), --no-serve, --stop.
 Работает на macOS, Linux и Windows (в том числе из Git Bash).
@@ -73,6 +77,9 @@ ARTIFACT = {"manifest": "manifest.md", "spec": "spec.md", "plan": "tickets/*.md"
 TICKET_STATUSES = {"start": "in-progress", "review": "review", "repair": "repair",
                    "done": "done", "fail": "failed", "retry": "in-progress", "reset": "pending"}
 LISTS = {"concerns", "additions", "report", "debt.placeholders", "debt.assumptions", "debt.emptyEnv"}
+WAIT_KINDS = ("briefing", "spec", "plan", "action", "stop")
+# Команда означает «пользователь ответил»: открытое ожидание закрывается само.
+MOVES_ON = {"stage", "ticket", "tickets", "check-plan", "coverage", "blind", "tests", "finish", "reopen"}
 RUN_DIR_RE = re.compile(r"\d{4}-\d{2}-\d{2}-[a-z0-9][a-z0-9-]*(?:--wip)?")
 LOOPBACK_HOST = "127.0.0.1"
 UPDATE_HOST = "raw.githubusercontent.com"
@@ -159,6 +166,7 @@ def fresh_state(a):
         "tickets": [], "tests": None,
         "debt": {"placeholders": [], "assumptions": [], "emptyEnv": []},
         "additions": [], "coverage": None, "concerns": [], "blind": None, "beats": [t],
+        "waiting": None, "waits": [],
     }
 
 
@@ -962,6 +970,30 @@ def cmd_reopen(state):
     register_row(state, "в работе", None)
 
 
+def close_wait(state):
+    """Ожидание пользователя кончилось: интервал уходит в waits — часы дашборда
+    его не считают, это не работа сборки."""
+    w = state.get("waiting")
+    if not w:
+        return
+    state.setdefault("waits", []).append({"kind": w.get("kind"), "from": w.get("since"),
+                                          "to": state["updatedAt"]})
+    state["waiting"] = None
+
+
+def cmd_ask(state, pos, opt):
+    """Сборка ждёт пользователя: раунд брифинга, ручной гейт, вопрос перед необратимым."""
+    kind = pos[0] if pos else ""
+    if kind not in WAIT_KINDS:
+        die("ask <%s> --note \"что ждём, одной строкой\"" % "|".join(WAIT_KINDS))
+    w = state.get("waiting")
+    if w and w.get("kind") != kind:
+        close_wait(state)
+        w = None
+    note = opt.get("note") if isinstance(opt.get("note"), str) else None
+    state["waiting"] = {"kind": kind, "since": w["since"] if w else state["updatedAt"], "note": note}
+
+
 def main():
     argv = sys.argv[1:]
     if "--stop-now" in argv:
@@ -977,6 +1009,12 @@ def main():
         if state is None:
             die("state.js ещё нет — начни с `ap.py init`")
         rest = pos[1:]
+        if cmd not in ("", "sync"):
+            # Время события ставится до команды: ей самой и журналу нужна одна метка.
+            state["updatedAt"] = now()
+            beat(state)
+        if cmd in MOVES_ON:
+            close_wait(state)
         if cmd == "stage":
             cmd_stage(state, rest, opt)
         elif cmd == "ticket":
@@ -994,15 +1032,16 @@ def main():
             cmd_numbers(state, cmd, rest, multi)
         elif cmd == "tests":
             state["tests"] = tests_pair(rest[0] if rest else "")
+        elif cmd == "ask":
+            cmd_ask(state, rest, opt)
+        elif cmd == "answered":
+            close_wait(state)
         elif cmd == "finish":
             notes = cmd_finish(state, opt)
         elif cmd == "reopen":
             cmd_reopen(state)
         elif cmd not in ("", "sync"):
             die("неизвестная команда %s — список в начале ap.py" % cmd)
-        if cmd not in ("", "sync"):
-            state["updatedAt"] = now()
-            beat(state)
     recount(state)
     notes = close_passed(state) + notes
     stage_artifacts(state)

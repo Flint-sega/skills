@@ -400,6 +400,46 @@ class Run(unittest.TestCase):
         self.ap("init", "--slug", "third")              # контроль: легитимная архивация жива
         self.assertTrue(os.path.exists(os.path.join(self.a, good, "state.js")))
 
+    # ── ask: ожидание пользователя ────────────────────────────────────────
+    def test_ask_waits_and_next_command_closes_it(self):
+        """ask ставит waiting; следующая рабочая команда (MOVES_ON) закрывает
+        ожидание сама, интервал уходит в waits — часы дашборда его не считают."""
+        self.init()
+        code, out = self.ap("ask", "briefing", "--note", "три вопроса")
+        self.assertEqual(code, 0, out)
+        w = self.state()["waiting"]
+        self.assertEqual((w["kind"], w["note"]), ("briefing", "три вопроса"))
+        self.ap("stage", "spec")
+        s = self.state()
+        self.assertIsNone(s["waiting"])
+        self.assertEqual([x["kind"] for x in s["waits"]], ["briefing"])
+
+    def test_answered_closes_explicitly_and_ask_switches_kind(self):
+        """answered закрывает ожидание без команды по делу; повторный ask с другим
+        kind закрывает старое ожидание, с тем же — не рвёт интервал."""
+        self.init()
+        self.ap("ask", "spec")
+        self.ap("answered")
+        s = self.state()
+        self.assertIsNone(s["waiting"])
+        self.assertEqual(len(s["waits"]), 1)
+        self.ap("ask", "plan", "--note", "раз")
+        since = self.state()["waiting"]["since"]
+        self.ap("ask", "plan", "--note", "два")
+        w = self.state()["waiting"]
+        self.assertEqual((w["note"], w["since"]), ("два", since))
+        self.assertEqual(len(self.state()["waits"]), 1)   # повторный ask интервал не рвёт
+        self.ap("ask", "briefing")
+        s = self.state()
+        self.assertEqual(s["waiting"]["kind"], "briefing")
+        self.assertEqual([x["kind"] for x in s["waits"]], ["spec", "plan"])
+
+    def test_ask_rejects_unknown_kind(self):
+        self.init()
+        code, out = self.ap("ask", "junk")
+        self.assertNotEqual(code, 0)
+        self.assertIn("ask <", out)
+
     def test_stages_list_their_artifacts(self):
         """Каждая синхронизация выгружает в state артефакты этапа, что лежат
         на диске, — дашборд показывает их ссылками; без файла поля нет."""

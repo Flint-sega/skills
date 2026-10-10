@@ -10,6 +10,8 @@
 
 **Ask a round, not a question.** One message holds the whole current frontier — every question whose answer does not depend on another unanswered one — up to four at a time, numbered. Each carries a recommended answer and a reason in half a line, so the user can reply «ок» to accept every recommendation, or «2 — таблица, остальное ок». The next round is built from the answers: what they opened, what they closed.
 
+Before each round goes out: `ap.py ask briefing --note "три вопроса — где хранить заявки, ночь, отмена"`. The answers close it — `ap.py answered`, or the next round's `ask`. The waiting time leaves the run's clock: hours count work, not silence.
+
 ```
 Три вопроса, дальше соберу сам:
 

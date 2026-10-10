@@ -370,7 +370,7 @@ const I18N = {
     overallTickets:(a,b)=>`${a} из ${b} тасков`,
     tickets:"Таски",ticketsDone:p=>`${p}% готово`,retries:n=>` · ${n} повтор.`,
     elapsed:"В работе",median:m=>`медиана на таск — ${m} мин`,tooEarly:"рано считать",
-    calendar:c=>`календарных ${c}`,paused:"пауза — часы стоят",
+    calendar:c=>`календарных ${c}`,paused:"пауза — часы стоят",waiting:"ждём тебя",
     left:"Осталось (оценка)",needTwo:"нужно 2+ готовых таска",
     critpath:n=>`критический путь: ${n} ${plural(n,'таск','таска','тасков')} в цепочке`,
     stagesTitle:"Этапы",stage:"Этап сейчас",stageOf:(a,b)=>`${a} из ${b} этапов`,
@@ -416,7 +416,7 @@ const I18N = {
     overallTickets:(a,b)=>`${a} of ${b} tickets`,
     tickets:"Tickets",ticketsDone:p=>`${p}% done`,retries:n=>` · ${n} retries`,
     elapsed:"Working time",median:m=>`median per ticket — ${m} min`,tooEarly:"too early to tell",
-    calendar:c=>`${c} on the calendar`,paused:"paused — the clock is stopped",
+    calendar:c=>`${c} on the calendar`,paused:"paused — the clock is stopped",waiting:"waiting for you",
     left:"Remaining (estimate)",critpath:n=>`critical path: ${n} tickets deep`,needTwo:"needs 2+ finished tickets",
     stagesTitle:"Stages",stage:"Current stage",stageOf:(a,b)=>`${a} of ${b} stages`,
     stages:{preflight:"Preflight",manifest:"Requirements",briefing:"Briefing",spec:"Spec",
@@ -520,16 +520,23 @@ function collectMarks(S){
   ((S.polish || {}).rounds || []).forEach(x => push(x.finishedAt));
   return Array.from(new Set(out)).sort((a, b) => a - b);
 }
-// Сумма промежутков между метками; каждый обрезан по порогу простоя.
+// Сумма промежутков между метками; каждый обрезан по порогу простоя,
+// интервалы ожидания пользователя (waits) вычитаются целиком — это не работа.
 function activeMs(from, to){
   const a = from ? new Date(from).getTime() : NaN;
   if (isNaN(a)) return null;
-  const b = to ? new Date(to).getTime() : Date.now();
+  let b = to ? new Date(to).getTime() : Date.now();
+  const w0 = (window.STATE || {}).waiting;              // открытое ожидание: часы стоят на нём
+  if (w0) { const f = new Date(w0.since).getTime(); if (!isNaN(f) && f < b) b = f; }
   if (b <= a) return 0;
   const pts = [a].concat(MARKS.filter(t => t > a && t < b), [b]);
   let s = 0;
   for (let i = 1; i < pts.length; i++) s += Math.min(pts[i] - pts[i-1], IDLE_CAP_MS);
-  return s;
+  for (const w of ((window.STATE || {}).waits) || []) {
+    const f = new Date(w.from).getTime(), e = new Date(w.to).getTime();
+    if (!isNaN(f) && !isNaN(e)) s -= Math.max(0, Math.min(b, e) - Math.max(a, f));
+  }
+  return Math.max(0, s);
 }
 // Стоят ли часы прямо сейчас — то есть тянется ли простой дольше порога.
 function idleNow(){
@@ -573,6 +580,11 @@ function tick(){
   });
   document.querySelectorAll('[data-idle-note]').forEach(el => {
     el.hidden = !stopped;
+  });
+  const waiting = (window.STATE || {}).waiting;
+  document.querySelectorAll('[data-wait-note]').forEach(el => {
+    el.hidden = !waiting;
+    if (waiting) el.textContent = `${CUR.waiting} · ${waiting.note || waiting.kind}`;
   });
   document.querySelectorAll('[data-ago]').forEach(el => {
     el.textContent = agoText(el.dataset.ago);
@@ -1083,6 +1095,7 @@ function render(lang){
       <div class="sub">${S.startedAt ? L.calendar(fmtClock(spanMs(S.startedAt, S.finishedAt))) + ' · ' : ''}${
         median ? L.median(median) : (buildMs != null ? L.buildTook(fmtClock(buildMs)) : L.tooEarly)}</div>
       <div class="sub stale" data-idle-note hidden>${L.paused}</div>
+      <div class="sub stale" data-wait-note hidden></div>
     </div>
     <div class="card"><div class="k">${L.left}</div>
       <div class="v">${eta ? fmtDur(eta[0]) : '—'}${eta ? `<small> … ${fmtDur(eta[1])}</small>` : ''}</div>
