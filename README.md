@@ -1,6 +1,19 @@
 # foreman
 
+[![CI](https://github.com/Flint-sega/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/Flint-sega/skills/actions/workflows/ci.yml)
+[![tests](https://img.shields.io/badge/tests-42-10b981)](https://github.com/Flint-sega/skills/actions/workflows/ci.yml)
+[![skill](https://img.shields.io/badge/skill-foreman-0b7a55)](README.md)
+
 **«Прораб»: расскажи словами, что нужно построить — получи готовый проект.**
+
+<img src="docs/img/dashboard-dark.png" alt="Дашборд прогона foreman, тёмная тема: карточки метрик с иконками, этапы-аккордеон, ход сборки и таски" width="100%">
+
+<details>
+<summary><b>Светлая тема</b></summary>
+
+<img src="docs/img/dashboard-light.png" alt="Дашборд прогона foreman, светлая тема" width="100%">
+
+</details>
 
 Прораб — skill для AI-агентов (Claude Code, Cursor, Codex, ZCode и другие): он берёт
 вашу идею, задаёт вопросы ровно там, где в ней есть развилки, а дальше сам пишет
