@@ -5,38 +5,55 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>foreman</title>
 <style>
-  /* ——— токены дизайна: имена фиксированы, значения — «карточный SaaS» ————— */
+  /* ——— токены дизайна: имена фиксированы, значения — «изумруд по референсу» ————— */
   :root, :root[data-theme="light"]{
     color-scheme:light;
-    --bg:#f6f6f7; --panel:#ffffff; --ink:#18181b; --dim:#71717a; --line:#e7e7ea;
-    --accent:#4f46e5; --ok:#059669; --warn:#d97706; --bad:#dc2626; --ghost:#f1f1f4; --info:#2563eb;
+    --bg:#f7faf8; --panel:#ffffff; --ink:#12211b; --dim:#69857a; --line:#e2ece6;
+    --accent:#10b981; --ok:#0b9d6f; --warn:#d97706; --bad:#dc2626; --ghost:#edf4f0; --info:#0e9f6e;
     --fix:#7c3aed;
     --radius:16px; --radius-sm:10px; --radius-xs:5px; --radius-pill:999px;
-    --glow:rgba(79,70,229,.32);
-    --shadow:0 1px 2px rgba(24,24,27,.05), 0 6px 20px rgba(24,24,27,.06);
+    --glow:rgba(16,185,129,.32);
+    --aura:rgba(52,211,153,.17);
+    --stbg:#e7f8f0; --stbd:#c9edda; --stfg:#0b7a55;
+    --icobg:#e7f8f0; --icobg-warn:#fdf1dc;
+    --okbg:#e5f5ee; --warnbg:#fdf3e0;
+    --deco-op:.5;
+    --shadow:0 1px 2px rgba(18,33,27,.05), 0 6px 20px rgba(18,33,27,.06);
   }
   @media (prefers-color-scheme:dark){
     :root:not([data-theme]){
       color-scheme:dark;
-      --bg:#101014; --panel:#17171b; --ink:#ececf0; --dim:#8f8f9a; --line:#26262c;
-      --accent:#8b93f8; --ok:#3ecf9a; --warn:#f5b73e; --bad:#f4776f; --ghost:#202026; --info:#6ea8f7;
+      --bg:#07130f; --panel:#0c2019; --ink:#e9f6ef; --dim:#7ea696; --line:#1b3a2e;
+      --accent:#34d399; --ok:#34d399; --warn:#f5b73e; --bad:#f4776f; --ghost:#0f2a21; --info:#4fd1a5;
       --fix:#b18af2;
-      --glow:rgba(139,147,248,.4);
-      --shadow:0 1px 2px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.3);
+      --glow:rgba(52,211,153,.35);
+      --aura:rgba(16,185,129,.16);
+      --stbg:rgba(52,211,153,.08); --stbd:#1c4a37; --stfg:#5ce0ac;
+      --icobg:rgba(52,211,153,.10); --icobg-warn:rgba(245,183,62,.10);
+      --okbg:rgba(52,211,153,.08); --warnbg:rgba(245,183,62,.08);
+      --deco-op:.9;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
     }
   }
   :root[data-theme="dark"]{
     color-scheme:dark;
-    --bg:#101014; --panel:#17171b; --ink:#ececf0; --dim:#8f8f9a; --line:#26262c;
-    --accent:#8b93f8; --ok:#3ecf9a; --warn:#f5b73e; --bad:#f4776f; --ghost:#202026; --info:#6ea8f7;
+    --bg:#07130f; --panel:#0c2019; --ink:#e9f6ef; --dim:#7ea696; --line:#1b3a2e;
+    --accent:#34d399; --ok:#34d399; --warn:#f5b73e; --bad:#f4776f; --ghost:#0f2a21; --info:#4fd1a5;
     --fix:#b18af2;
-    --glow:rgba(139,147,248,.4);
-    --shadow:0 1px 2px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.3);
+    --glow:rgba(52,211,153,.35);
+    --aura:rgba(16,185,129,.16);
+    --stbg:rgba(52,211,153,.08); --stbd:#1c4a37; --stfg:#5ce0ac;
+    --icobg:rgba(52,211,153,.10); --icobg-warn:rgba(245,183,62,.10);
+    --okbg:rgba(52,211,153,.08); --warnbg:rgba(245,183,62,.08);
+    --deco-op:.9;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
+  body{margin:0;color:var(--ink);
     font:15px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
-    -webkit-font-smoothing:antialiased;padding:28px 20px 56px}
+    -webkit-font-smoothing:antialiased;padding:28px 20px 56px;
+    background-color:var(--bg);
+    background-image:radial-gradient(760px 420px at -4% -6%, var(--aura), transparent 70%)}
   .wrap{max-width:1080px;margin:0 auto;min-width:0}
   /* wrap на .top: в узкой панели переключатели уходят на вторую строку, а не за край */
   .top{display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
@@ -65,24 +82,24 @@
   .badge{font-size:11px;letter-spacing:.04em;text-transform:uppercase;font-weight:650;
     border:1px solid var(--bd,var(--line));border-radius:var(--radius-pill);padding:3px 10px;
     color:var(--fg,var(--dim));background:var(--bbg,transparent)}
-  /* режим — синяя семья, насыщенность растёт с автономией */
-  .b-mode-1{--bbg:#eef2ff;--bd:#dbe1fb;--fg:#4a51b0}
-  .b-mode-2{--bbg:#e7ecfe;--bd:#d1dafa;--fg:#3d45a3}
-  .b-mode-3{--bbg:#dfe6fd;--bd:#c4cff7;--fg:#2f3895}
-  .b-mode-4{--bbg:#d3dcfb;--bd:#aebef3;--fg:#232b87}
-  .b-done{--bbg:#e5f5ee;--bd:#bfe4d2;--fg:#057a55}
+  /* режим — зелёная семья, насыщенность растёт с автономией */
+  .b-mode-1{--bbg:#effaf3;--bd:#d4f0e2;--fg:#2e8f68}
+  .b-mode-2{--bbg:#e2f6ea;--bd:#c2ebd5;--fg:#23795a}
+  .b-mode-3{--bbg:#d7f2e2;--bd:#aedfc6;--fg:#186147}
+  .b-mode-4{--bbg:#c9edda;--bd:#98d4b5;--fg:#0d4f37}
+  .b-done{--bbg:#e7f8f0;--bd:#c9edda;--fg:#0b7a55}
   @media (prefers-color-scheme:dark){
-    :root:not([data-theme]) .b-mode-1{--bbg:#1b1d30;--bd:#2e3256;--fg:#a3aaf5}
-    :root:not([data-theme]) .b-mode-2{--bbg:#1d2040;--bd:#333867;--fg:#aeb4f7}
-    :root:not([data-theme]) .b-mode-3{--bbg:#20234a;--bd:#383e79;--fg:#babffb}
-    :root:not([data-theme]) .b-mode-4{--bbg:#242858;--bd:#3f4690;--fg:#c9cdfd}
-    :root:not([data-theme]) .b-done{--bbg:#122619;--bd:#235037;--fg:#3ecf9a}
+    :root:not([data-theme]) .b-mode-1{--bbg:#0c231b;--bd:#1b4234;--fg:#57c696}
+    :root:not([data-theme]) .b-mode-2{--bbg:#0e2a20;--bd:#1f4d3c;--fg:#63d3a3}
+    :root:not([data-theme]) .b-mode-3{--bbg:#103126;--bd:#245a46;--fg:#70dbae}
+    :root:not([data-theme]) .b-mode-4{--bbg:#12382b;--bd:#2a6b52;--fg:#7fe4bb}
+    :root:not([data-theme]) .b-done{--bbg:#0d2a1f;--bd:#1c4a37;--fg:#4adba4}
   }
-  :root[data-theme="dark"] .b-mode-1{--bbg:#1b1d30;--bd:#2e3256;--fg:#a3aaf5}
-  :root[data-theme="dark"] .b-mode-2{--bbg:#1d2040;--bd:#333867;--fg:#aeb4f7}
-  :root[data-theme="dark"] .b-mode-3{--bbg:#20234a;--bd:#383e79;--fg:#babffb}
-  :root[data-theme="dark"] .b-mode-4{--bbg:#242858;--bd:#3f4690;--fg:#c9cdfd}
-  :root[data-theme="dark"] .b-done{--bbg:#122619;--bd:#235037;--fg:#3ecf9a}
+  :root[data-theme="dark"] .b-mode-1{--bbg:#0c231b;--bd:#1b4234;--fg:#57c696}
+  :root[data-theme="dark"] .b-mode-2{--bbg:#0e2a20;--bd:#1f4d3c;--fg:#63d3a3}
+  :root[data-theme="dark"] .b-mode-3{--bbg:#103126;--bd:#245a46;--fg:#70dbae}
+  :root[data-theme="dark"] .b-mode-4{--bbg:#12382b;--bd:#2a6b52;--fg:#7fe4bb}
+  :root[data-theme="dark"] .b-done{--bbg:#0d2a1f;--bd:#1c4a37;--fg:#4adba4}
   .meta{font-size:12.5px;color:var(--dim);letter-spacing:.01em}
   /* строка времени: часы сейчас + начало прогона + завершение (факт или оценка) */
   .clockbar{display:flex;gap:14px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
@@ -90,9 +107,15 @@
   .clockbar b{font-weight:650}
   .clockbar .eta{color:var(--accent)}
   /* ——— статус-строка «что происходит сейчас» ————————————————————————— */
-  .status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-    background:var(--ghost);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;
-    font-size:13.5px;min-width:0}
+  /* сданный прогон — зелёный баннер с кружком-галочкой справа (по референсу) */
+  .status{position:relative;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:var(--ghost);border:1px solid transparent;border-radius:var(--radius-sm);
+    padding:10px 14px;margin-bottom:16px;font-size:13.5px;min-width:0}
+  .status.ok{background:var(--stbg);border-color:var(--stbd);color:var(--stfg);padding-right:48px}
+  .status.ok::after{content:"✓";position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    width:22px;height:22px;border-radius:var(--radius-pill);border:1.5px solid var(--stbd);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+    color:var(--stfg);background:var(--panel)}
   .status b{font-weight:650;font-variant-numeric:tabular-nums}
   .status .lbl{color:var(--dim)}
   .status .dim{color:var(--dim)}
@@ -110,8 +133,22 @@
   .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));margin-bottom:14px}
   /* ряды показателей: четыре карточки в строку держатся дольше, чем списки долга */
   .grid.m{grid-template-columns:repeat(auto-fit,minmax(min(178px,100%),1fr))}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-    box-shadow:var(--shadow);padding:18px 20px;min-width:0}
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px 20px;min-width:0;overflow:hidden}
+  .card>*{position:relative;z-index:1}
+  /* иконка в правом углу карточки и декоративный водяной знак (по референсу) */
+  .c-ico{position:absolute;z-index:1;top:13px;right:13px;width:30px;height:30px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;color:var(--accent);background:var(--icobg)}
+  .c-ico svg{width:16px;height:16px}
+  .c-ico.warn{color:var(--warn);background:var(--icobg-warn)}
+  .c-deco{position:absolute;z-index:0;right:10px;bottom:6px;pointer-events:none;
+    color:var(--accent);opacity:var(--deco-op)}
+  .card>*.c-deco{z-index:0}
+  .c-deco svg{display:block}
+  .deco-layers{width:92px}
+  .deco-bars{width:132px;right:14px;bottom:10px}
+  .deco-waves{left:14px;right:14px;bottom:-4px}
+  .deco-waves svg{width:100%;height:auto}
   .k{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);
     font-weight:600;margin-bottom:10px}
   .k.sm{margin-bottom:6px}
@@ -141,8 +178,8 @@
   .tlsum{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
   .chip{font-size:11.5px;letter-spacing:.03em;border:1px solid var(--line);border-radius:var(--radius-pill);
     padding:3px 10px;color:var(--dim);font-variant-numeric:tabular-nums;background:var(--bg)}
-  .chip.ok{border-color:var(--ok);color:var(--ok)}
-  .chip.run{border-color:var(--warn);color:var(--warn)}
+  .chip.ok{border-color:var(--ok);color:var(--ok);background:var(--okbg)}
+  .chip.run{border-color:var(--warn);color:var(--warn);background:var(--warnbg)}
   .chip.info{border-color:var(--info);color:var(--info)}
   .chip.bad{border-color:var(--bad);color:var(--bad)}
   .chip.fix{border-color:var(--fix);color:var(--fix)}
@@ -331,6 +368,27 @@ const SUN  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>';
 const SYNC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>';
 const CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+
+// Иконки карточек и водяные знаки — статичные, данных не несут (по референсу дизайна).
+const stroke = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+const ICO = {
+  trend: stroke('<polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/>'),
+  layers: stroke('<polygon points="12 2 22 8.5 12 15 2 8.5 12 2"/><polyline points="2 13 12 19.5 22 13"/><polyline points="2 17.5 12 23.5 22 17.5"/>'),
+  clock: stroke('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/>'),
+  hourglass: stroke('<path d="M7 3h10M7 21h10"/><path d="M8 3c0 4 2.5 4.8 4 6 1.5-1.2 4-2 4-6"/><path d="M8 21c0-4 2.5-4.8 4-6 1.5 1.2 4 2 4 6"/>'),
+  list: stroke('<line x1="9.5" y1="6" x2="20" y2="6"/><line x1="9.5" y1="12" x2="20" y2="12"/><line x1="9.5" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1.1"/><circle cx="4.5" cy="12" r="1.1"/><circle cx="4.5" cy="18" r="1.1"/>'),
+  doc: stroke('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>'),
+  flask: stroke('<path d="M10 3v6L4.6 18.8A2 2 0 0 0 6.4 21.8h11.2a2 2 0 0 0 1.8-3L14 9V3"/><path d="M8.5 3h7"/><path d="M7.2 15h9.6"/>'),
+  warn: stroke('<path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13.5"/><circle cx="12" cy="17" r="0.4"/>')
+};
+const DECO = {
+  layers: '<svg viewBox="0 0 120 92" fill="none"><path d="M60 4 106 28 60 52 14 28Z" fill="currentColor"/><path d="M14 44 60 68 106 44" stroke="currentColor" stroke-width="7" opacity=".55"/><path d="M14 60 60 84 106 60" stroke="currentColor" stroke-width="7" opacity=".28"/></svg>',
+  bars: '<svg viewBox="0 0 140 56" fill="currentColor">' +
+    [12,22,9,28,16,36,24,44,18,32,12,26,18,10].map((h,i) =>
+      `<rect x="${i*10}" y="${56-h}" width="6" height="${h}" rx="2"/>`).join('') + '</svg>',
+  waves: '<svg viewBox="0 0 220 64" fill="none" stroke="currentColor" stroke-width="1.6">' +
+    [0,14,28,42].map((y,i) => `<path opacity="${1 - i*0.22}" d="M0 ${18+y} C 28 ${6+y}, 56 ${30+y}, 84 ${18+y} S 140 ${6+y}, 168 ${18+y} S 208 ${30+y}, 220 ${22+y}"/>`).join('') + '</svg>'
+};
 
 const systemDark = () => {
   try { return matchMedia('(prefers-color-scheme: dark)').matches; } catch(e) { return false; }
@@ -1084,29 +1142,29 @@ function render(lang){
     </div>
   </header>
 
-  <div class="status">${statusLine()}</div>
+  <div class="status${S.finishedAt ? ' ok' : ''}">${statusLine()}</div>
 
   <div class="grid m">
-    <div class="card"><div class="k">${L.overall}</div>
+    <div class="card"><span class="c-ico">${ICO.trend}</span><div class="k">${L.overall}</div>
       <div class="v big">${overallPct}<small>%</small></div>
       <div class="bar lg"><i style="width:${overallPct}%"></i></div>
       <div class="sub">${L.overallStages(stagesDone, stages.length)}${
         T.length ? ' · ' + L.overallTickets(done.length, T.length) : ''}</div>
       <div class="spark-wrap"><div class="k sm">${L.pace}</div>${sparkline()}</div>
     </div>
-    <div class="card"><div class="k">${L.stage}</div>
+    <div class="card"><span class="c-ico">${ICO.layers}</span><span class="c-deco deco-layers">${DECO.layers}</span><div class="k">${L.stage}</div>
       <div class="v stage">${esc(curStage ? stName(curStage) : L.allDone)}</div>
       <div class="sub">${L.stageOf(stageNo, stages.length)}${
         activeStage?.startedAt ? ' · ' + timerHTML(activeStage.startedAt, null) : ''}</div>
     </div>
-    <div class="card"><div class="k">${L.elapsed}</div>
+    <div class="card"><span class="c-ico">${ICO.clock}</span><span class="c-deco deco-bars">${DECO.bars}</span><div class="k">${L.elapsed}</div>
       <div class="v">${S.startedAt ? timerHTML(S.startedAt, S.finishedAt) : '—'}</div>
       <div class="sub">${S.startedAt ? L.calendar(fmtClock(spanMs(S.startedAt, S.finishedAt))) + ' · ' : ''}${
         median ? L.median(median) : (buildMs != null ? L.buildTook(fmtClock(buildMs)) : L.tooEarly)}</div>
       <div class="sub stale" data-idle-note hidden>${L.paused}</div>
       <div class="sub stale" data-wait-note hidden></div>
     </div>
-    <div class="card"><div class="k">${L.left}</div>
+    <div class="card"><span class="c-ico">${ICO.hourglass}</span><span class="c-deco deco-waves">${DECO.waves}</span><div class="k">${L.left}</div>
       <div class="v">${eta ? fmtDur(eta[0]) : '—'}${eta ? `<small> … ${fmtDur(eta[1])}</small>` : ''}</div>
       <div class="sub">${eta ? L.critpath(cp)
         : (t0 ? L.noEta : (T.length && done.length === T.length ? L.wrapUp : L.needTwo))}</div>
@@ -1114,7 +1172,7 @@ function render(lang){
   </div>
 
   <div class="grid m">
-    <div class="card sm"><div class="k sm">${L.tickets}</div>
+    <div class="card sm"><span class="c-ico">${ICO.list}</span><div class="k sm">${L.tickets}</div>
       <div class="v">${T.length ? `${done.length}<small> / ${T.length}</small>`
         : t0 ? `<span class="v-sm">${L.noTicketsTier}</span>` : '—'}</div>
       ${T.length ? `<div class="bar"><i style="width:${ticketPct}%"></i></div>
@@ -1122,16 +1180,16 @@ function render(lang){
         retries ? L.retries(retries) : ''}</div>`
         : `<div class="sub">${t0 ? L.tier(esc(S.tier)) : L.notCut}</div>`}
     </div>
-    <div class="card sm"><div class="k sm">${L.reqs}</div>
+    <div class="card sm"><span class="c-ico">${ICO.doc}</span><div class="k sm">${L.reqs}</div>
       <div class="v">${R.total||0}</div>
       <div class="sub">${live ? `${coverage}% · ${L.ofReq(R.done||0, live)}` : L.none}</div>
       <div class="sub">${L.reqsSub(R.dropped||0, R.deferred||0, R.placeholder||0)}</div>
     </div>
-    <div class="card sm"><div class="k sm">${L.tests}</div>
+    <div class="card sm"><span class="c-ico">${ICO.flask}</span><div class="k sm">${L.tests}</div>
       <div class="v">${tests ? tests.passed : '—'}${tests && tests.failed ? `<small style="color:var(--bad)"> · ${L.failed(tests.failed)}</small>` : ''}</div>
       <div class="sub">${T.length ? L.testsSub : L.testsSubOne}</div>
     </div>
-    <div class="card sm"><div class="k sm">${L.debt}</div>
+    <div class="card sm"><span class="c-ico warn">${ICO.warn}</span><div class="k sm">${L.debt}</div>
       <div class="v">${debtN}</div>
       <div class="sub">${L.debtSub(S.debt?.placeholders?.length||0, S.debt?.assumptions?.length||0, S.debt?.emptyEnv?.length||0)}</div>
     </div>
