@@ -520,8 +520,18 @@ function collectMarks(S){
   ((S.polish || {}).rounds || []).forEach(x => push(x.finishedAt));
   return Array.from(new Set(out)).sort((a, b) => a - b);
 }
-// Сумма промежутков между метками; каждый обрезан по порогу простоя,
-// интервалы ожидания пользователя (waits) вычитаются целиком — это не работа.
+// Сколько из промежутка [a,b) ушло на ожидание пользователя — это не работа.
+function waitedIn(a, b){
+  let w = 0;
+  for (const it of ((window.STATE || {}).waits) || []) {
+    const f = new Date(it.from).getTime(), e = new Date(it.to).getTime();
+    if (!isNaN(f) && !isNaN(e)) w += Math.max(0, Math.min(b, e) - Math.max(a, f));
+  }
+  return w;
+}
+// Сумма промежутков между метками. Ожидание вычитается ВНУТРИ каждого промежутка,
+// до порога простоя: вычесть его из зажатой суммы нельзя — ожидание длиннее порога
+// уходило в минус и обнуляло всю накопленную работу (найдено независимым ревью).
 function activeMs(from, to){
   const a = from ? new Date(from).getTime() : NaN;
   if (isNaN(a)) return null;
@@ -531,17 +541,16 @@ function activeMs(from, to){
   if (b <= a) return 0;
   const pts = [a].concat(MARKS.filter(t => t > a && t < b), [b]);
   let s = 0;
-  for (let i = 1; i < pts.length; i++) s += Math.min(pts[i] - pts[i-1], IDLE_CAP_MS);
-  for (const w of ((window.STATE || {}).waits) || []) {
-    const f = new Date(w.from).getTime(), e = new Date(w.to).getTime();
-    if (!isNaN(f) && !isNaN(e)) s -= Math.max(0, Math.min(b, e) - Math.max(a, f));
+  for (let i = 1; i < pts.length; i++) {
+    const gap = Math.max(0, pts[i] - pts[i-1] - waitedIn(pts[i-1], pts[i]));
+    s += Math.min(gap, IDLE_CAP_MS);
   }
-  return Math.max(0, s);
+  return s;
 }
 // Стоят ли часы прямо сейчас — то есть тянется ли простой дольше порога.
 function idleNow(){
   const S = window.STATE || {};
-  if (!S || S.finishedAt) return false;
+  if (!S || S.finishedAt || S.waiting) return false;   // ждём тебя — не простой
   const last = MARKS.length ? MARKS[MARKS.length - 1] : null;
   return last != null && Date.now() - last > IDLE_CAP_MS;
 }
@@ -595,7 +604,7 @@ function tick(){
     const S = window.STATE || {};
     const busy = (S.tickets || []).some(t =>
       t.status === 'in-progress' || t.status === 'review' || t.status === 'repair');
-    el.classList.toggle('stale', !S.finishedAt
+    el.classList.toggle('stale', !S.finishedAt && !S.waiting
       && spanMs(el.dataset.ago, null) > (busy ? 2700000 : 300000));
   });
 }

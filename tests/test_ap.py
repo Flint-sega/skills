@@ -440,6 +440,20 @@ class Run(unittest.TestCase):
         self.assertNotEqual(code, 0)
         self.assertIn("ask <", out)
 
+    def test_answered_without_wait_and_finish_closes_wait(self):
+        """answered без открытого ожидания безвреден; finish закрывает открытое
+        ожидание сам, интервал не инвертирован (from <= to)."""
+        self.init()
+        code, out = self.ap("answered")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.state()["waits"], [])
+        self.ap("ask", "action", "--note", "перед необратимым")
+        self.ap("finish", "--result", "готово")
+        s = self.state()
+        self.assertIsNone(s["waiting"])
+        self.assertEqual([x["kind"] for x in s["waits"]], ["action"])
+        self.assertTrue(all(x["from"] <= x["to"] for x in s["waits"]))
+
     def test_stages_list_their_artifacts(self):
         """Каждая синхронизация выгружает в state артефакты этапа, что лежат
         на диске, — дашборд показывает их ссылками; без файла поля нет."""

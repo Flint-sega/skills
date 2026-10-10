@@ -9,7 +9,7 @@
 |---------|------------|
 | `python3 -m py_compile tools/*.py skills/foreman/tools/ap.py tests/*.py` | Синтаксис всех Python-файлов |
 | `python3 tools/check_frontmatter.py` | Frontmatter всех SKILL.md (нужен `pyyaml`) |
-| `python3 -m unittest discover -s tests` | Тесты (40); один файл: `python3 -m unittest tests.test_ap -v` |
+| `python3 -m unittest discover -s tests` | Тесты (41); один файл: `python3 -m unittest tests.test_ap -v` |
 | `python3 tools/scan_secrets.py` | Скан секретов |
 | `python3 tools/recompute-lock.py --check` | computedHash манифеста актуален (шестой шаг CI); `--write` — записать |
 | `node -e "const fs=require('fs');const html=fs.readFileSync('skills/foreman/phases/dashboard-template.html','utf8');new Function(html.match(/<script>([\s\S]*?)<\/script>/g).map(s=>s.replace(/<\/?script>/g,'')).join('\n'));console.log('template JS: parses');"` | JS шаблона дашборда парсится (тот же шаг в CI) |

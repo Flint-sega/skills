@@ -77,6 +77,7 @@ Immediately after `init`, before Phase 1 asks anything.
 | G2 result | `coverage found=2 fixed=1 deferred=1 --item "R07 — отложено: …"` |
 | blind acceptance | one call: `blind checked=12 matched=11 --mismatch "R07 — статус не виден" --mismatch "…"` |
 | a full check outside a ticket | `tests 34/0` |
+| the run stops to wait for the user | `ask briefing|spec|plan|action|stop --note "чего ждём, одной строкой"` — waiting time leaves the run's clock; closed by `answered` or the next working call. The note names what is awaited, never the answer itself |
 | the run lands | `finish --result "одна строка: что теперь есть"` |
 
 All are `python3 .autopilot/ap.py …`, and `add` takes several values in one call. **Chain a call with the command it belongs to**, so one event is one turn — the commit of a ticket and its `done` go together (`phases/5-subagents.md`, step 7). Never chain a commit after a check whose result you have not read: `| tail` always exits 0.
