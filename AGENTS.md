@@ -1,7 +1,7 @@
 <!-- autopilot:start -->
-# skills — репозиторий навыка foreman (форк Flint-sega/skills)
+# skills — репозиторий навыка foreman (Flint-sega/skills)
 
-Форк апстрима nick-vels/skills: конвейеры сборки навыков (foreman и другие) с тестами и CI. Пайплайны лежат в `skills/<имя>/` (SKILL.md + phases/ + prompts/ + tools/), проверяются `tests/` и GitHub Actions.
+Вырос из nick-vels/skills (autopilot) и развивается самостоятельно: конвейеры сборки навыков (foreman и другие) с тестами и CI. Пайплайны лежат в `skills/<имя>/` (SKILL.md + phases/ + prompts/ + tools/), проверяются `tests/` и GitHub Actions.
 
 ## Команды
 
