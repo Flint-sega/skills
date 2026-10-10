@@ -7,6 +7,7 @@
 <style>
   /* ——— токены дизайна: имена фиксированы, значения — «карточный SaaS» ————— */
   :root, :root[data-theme="light"]{
+    color-scheme:light;
     --bg:#f6f6f7; --panel:#ffffff; --ink:#18181b; --dim:#71717a; --line:#e7e7ea;
     --accent:#4f46e5; --ok:#059669; --warn:#d97706; --bad:#dc2626; --ghost:#f1f1f4; --info:#2563eb;
     --fix:#7c3aed;
@@ -15,6 +16,7 @@
   }
   @media (prefers-color-scheme:dark){
     :root:not([data-theme]){
+      color-scheme:dark;
       --bg:#101014; --panel:#17171b; --ink:#ececf0; --dim:#8f8f9a; --line:#26262c;
       --accent:#8b93f8; --ok:#3ecf9a; --warn:#f5b73e; --bad:#f4776f; --ghost:#202026; --info:#6ea8f7;
       --fix:#b18af2;
@@ -23,6 +25,7 @@
     }
   }
   :root[data-theme="dark"]{
+    color-scheme:dark;
     --bg:#101014; --panel:#17171b; --ink:#ececf0; --dim:#8f8f9a; --line:#26262c;
     --accent:#8b93f8; --ok:#3ecf9a; --warn:#f5b73e; --bad:#f4776f; --ghost:#202026; --info:#6ea8f7;
     --fix:#b18af2;
@@ -353,7 +356,7 @@ const I18N = {
     chipDone:n=>`готово ${n}`,chipRun:n=>`пишутся ${n}`,chipWait:n=>`ждут ${n}`,chipFailed:n=>`упало ${n}`,
     chipReview:n=>`на ревью ${n}`,chipRepair:n=>`в ремонте ${n}`,
     phase:{'in-progress':"пишется",review:"ревью",repair:"ремонт"},
-    nowLbl:"Сейчас:",nowIdle:"Ни один таск не запущен.",
+    nowIdle:"Ни один таск не запущен.",
     noTickets:"Тасков пока нет — идёт подготовка.",
     reqOk:"выполнено",reqPart:"частично: остались другие таски",
     tblTickets:"Таски",thN:"#",thTitle:"Таск",thReq:"Требования",thTime:"Время",thRetry:"Повт.",
@@ -369,7 +372,6 @@ const I18N = {
     tier:t=>`ярус ${t}`,finished:"завершено",min:"мин",hr:"ч",m:"м",
     statusFinished:"Прогон завершён",waitStart:"Ждёт старта — прогон ещё не начался",stagePrefix:"Этап:",
     pace:"Темп",paceHint:"мало меток — график появится по ходу работы",
-    loading:"Ждём данные прогона…",
     langLabel:"Язык",themeLabel:"Тема",themeLight:"Светлая тема",themeDark:"Тёмная тема"},
   en:{lang:"en",coverage:"Brief coverage",ofReq:(a,b)=>`${a} of ${b} requirements`,
     overall:"Project progress",overallStages:(a,b)=>`${a} of ${b} stages done`,
@@ -397,7 +399,7 @@ const I18N = {
     chipDone:n=>`${n} done`,chipRun:n=>`${n} writing`,chipWait:n=>`${n} waiting`,chipFailed:n=>`${n} failed`,
     chipReview:n=>`${n} in review`,chipRepair:n=>`${n} in repair`,
     phase:{'in-progress':"writing",review:"review",repair:"repair"},
-    nowLbl:"Now:",nowIdle:"No ticket is running.",
+    nowIdle:"No ticket is running.",
     noTickets:"No tickets yet — still preparing.",
     reqOk:"done",reqPart:"partly: other tickets pending",
     tblTickets:"Tickets",thN:"#",thTitle:"Ticket",thReq:"Requirements",thTime:"Time",thRetry:"Retry",
@@ -413,7 +415,6 @@ const I18N = {
     tier:t=>`tier ${t}`,finished:"finished",min:"min",hr:"h",m:"m",
     statusFinished:"Run finished",waitStart:"Waiting to start — the run hasn't begun",stagePrefix:"Stage:",
     pace:"Pace",paceHint:"few beats yet — the chart fills in as work proceeds",
-    loading:"Waiting for run data…",
     langLabel:"Language",themeLabel:"Theme",themeLight:"Light theme",themeDark:"Dark theme"}
 };
 
@@ -581,7 +582,7 @@ function showLink(){
 }
 
 function noStateMessage(){
-  return (navigator.language || '').startsWith('ru')
+  return savedLang === 'ru'
     ? 'Состояния нет ни внутри страницы, ни в файле .autopilot/state.js рядом: прогон только начался, либо файл помялся.'
     : 'No state either inside the page or in .autopilot/state.js beside it: the run has just started, or the file got mangled.';
 }
@@ -597,6 +598,9 @@ function pullState(done){
   // остаётся на экране, следующий круг через десять секунд подберёт целое.
   // Две подряд — уже не запись, а мёртвый сервер: тогда страница говорит об этом.
   const end = ok => {
+    // onload не гарантирует валидный payload: битый state.js валит скрипт молча,
+    // а снимок-заглушка пишет STATE=null. Читающая сторона контракта проверяет сама.
+    if (ok && !(window.STATE && typeof window.STATE === 'object')) ok = false;
     s.remove();
     pulling = false;
     misses = ok ? 0 : misses + 1;
@@ -638,8 +642,8 @@ function refreshNow(btn){
 function renderSkeleton(){
   const app = document.getElementById('app');
   if (!app) return;
-  const ru = (navigator.language || '').startsWith('ru');
-  const skelCard = '<div class="card"><div class="skel skel-box kw"></div><div class="skel skel-box vw"></div></div>';
+  const ru = savedLang === 'ru';
+  const skelCard ='<div class="card"><div class="skel skel-box kw"></div><div class="skel skel-box vw"></div></div>';
   app.innerHTML = `
   <div class="top"><span class="logo-word">foreman</span></div>
   <div class="skel skel-line w60"></div>
@@ -892,8 +896,8 @@ function render(lang){
     <td class="mins">${t.startedAt ? timerHTML(t.startedAt, t.finishedAt) : '—'}</td>
     <td class="mins">${t.retries ? t.retries : ''}${
       t.repairs ? `<span style="color:var(--fix)"> +${t.repairs}</span>` : ''}</td>
-    <td class="mins">${t.tests ? (t.tests.failed ? `<span style="color:var(--bad)">${t.tests.failed} ✗</span>` : t.tests.passed + ' ✓') : '—'}</td>
-    <td class="mins">${t.commit ? `<code>${esc(t.commit).slice(0,7)}</code>` : '—'}</td>
+    <td class="mins">${t.tests ? (t.tests.failed ? `<span style="color:var(--bad)">${t.tests.failed} ✗</span>` : (t.tests.passed ? t.tests.passed + ' ✓' : '—')) : '—'}</td>
+    <td class="mins">${t.commit ? `<code>${esc(String(t.commit).slice(0,7))}</code>` : '—'}</td>
   </tr>`).join('');
 
   // Ярус T0: тасков нет по замыслу — вместо пустой таблицы показываем сам заход.
@@ -901,8 +905,8 @@ function render(lang){
   const t0block = `<div class="note"><b>${L.t0note(sp?.files?.length ? L.t0files(sp.files.length) : '')}</b>
     <div class="sub" style="margin-top:6px">
       ${sp?.startedAt ? `${L.thTime}: ${timerHTML(sp.startedAt, sp.finishedAt)} · ` : ''}
-      ${sp?.tests ? `${L.thTests}: ${sp.tests.failed ? `<span style="color:var(--bad)">${sp.tests.failed} ✗</span>` : sp.tests.passed + ' ✓'} · ` : ''}
-      ${sp?.commit ? `${L.thCommit}: <code>${esc(sp.commit).slice(0,7)}</code>` : ''}
+      ${sp?.tests ? `${L.thTests}: ${sp.tests.failed ? `<span style="color:var(--bad)">${sp.tests.failed} ✗</span>` : (sp.tests.passed ? sp.tests.passed + ' ✓' : '—')} · ` : ''}
+      ${sp?.commit ? `${L.thCommit}: <code>${esc(String(sp.commit).slice(0,7))}</code>` : ''}
     </div></div>`;
 
   // Свёртываемый блок: шапка-кнопка с счётчиком и шевроном; открытость —
@@ -1086,7 +1090,7 @@ applyTheme(storedTheme());
 function bootFail(why){
   const app = document.getElementById('app');
   if (!app) return;
-  const ru = (navigator.language || '').startsWith('ru');
+  const ru = savedLang === 'ru';
   app.innerHTML = '<div class="card"><div class="k">' +
     (ru ? 'Дашборд ещё не прочитал состояние' : 'Dashboard has no state yet') +
     '</div><div class="sub" style="margin-top:10px">' + why + '</div>' +
