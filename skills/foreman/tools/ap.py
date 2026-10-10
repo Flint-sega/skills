@@ -451,7 +451,9 @@ def write_snapshot(state):
     i, j = page.find(BEGIN), page.find(END)
     if i < 0 or j < 0:
         return "страница без маркеров снимка — перекопируй dashboard.html из навыка"
-    payload = "window.STATE=" + json.dumps(state, ensure_ascii=False).replace("<", "\\u003c") + ";"
+    payload = ("window.STATE=" + json.dumps(state, ensure_ascii=False)
+               .replace("<", "\\u003c")
+               .replace("\u2028", "\\u2028").replace("\u2029", "\\u2029") + ";")
     new = page[: i + len(BEGIN)] + payload + page[j:]
     if new != page:
         write_under(A, PAGE, new)

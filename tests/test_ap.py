@@ -108,6 +108,17 @@ class Run(unittest.TestCase):
         self.assertNotIn("<!--<script>", page)
         self.assertIn("\\u003c", page)
 
+    def test_snapshot_escapes_line_separators(self):
+        """U+2028/U+2029 в снапшоте экранируются: валидный JSON, но терминаторы
+        строк для старых JS-движков — страница молча ломалась (ревью 0343df7)."""
+        code, out = self.ap("init", "--slug", "sep", "--title", "раз\u2028два\u2029три",
+                            "--skill-dir", SKILL)
+        self.assertEqual(code, 0, out)
+        page = read(os.path.join(self.a, "dashboard.html"))
+        self.assertNotIn("\u2028", page)
+        self.assertNotIn("\u2029", page)
+        self.assertIn("\\u2028", page)
+
     def test_stage_accepts_foreign_slug_and_rejects_junk(self):
         """Свой набор стадий: латинский слаг принимается, мусор — нет."""
         self.init()
