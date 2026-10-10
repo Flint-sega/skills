@@ -38,6 +38,7 @@ import datetime as dt
 import glob
 import json
 import os
+import pathlib
 import re
 import socket
 import subprocess
@@ -45,6 +46,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 
 for _s in (sys.stdout, sys.stderr):                       # cp1251-консоль Windows
     try:
@@ -71,6 +73,9 @@ ARTIFACT = {"manifest": "manifest.md", "spec": "spec.md", "plan": "tickets/*.md"
 TICKET_STATUSES = {"start": "in-progress", "review": "review", "repair": "repair",
                    "done": "done", "fail": "failed", "retry": "in-progress", "reset": "pending"}
 LISTS = {"concerns", "additions", "report", "debt.placeholders", "debt.assumptions", "debt.emptyEnv"}
+RUN_DIR_RE = re.compile(r"\d{4}-\d{2}-\d{2}-[a-z0-9][a-z0-9-]*(?:--wip)?")
+LOOPBACK_HOST = "127.0.0.1"
+UPDATE_HOST = "raw.githubusercontent.com"
 
 
 def now():
@@ -97,11 +102,21 @@ def read_state():
             "или поправь строку" % (e.lineno, e.msg))
 
 
+def write_under(root, path, data):
+    """Запись с гейтом CWE-22: файл обязан лежать внутри root.
+    Все пути записи ap.py — внутри .autopilot; единственный внешний вход —
+    dir прогона, и он проверен в run_dir(). Атомарность: tmp + os.replace."""
+    base = os.path.realpath(root)
+    real = os.path.realpath(path)
+    if os.path.realpath(os.path.dirname(real)) != base and not real.startswith(base + os.sep):
+        die("путь %s вне %s — запись запрещена" % (path, root))
+    tmp = path + ".tmp"
+    pathlib.Path(tmp).write_text(data, encoding="utf-8")
+    os.replace(tmp, path)
+
+
 def save(state):
-    tmp = STATE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write("window.STATE =\n" + json.dumps(state, ensure_ascii=False, indent=2) + "\n")
-    os.replace(tmp, STATE)
+    write_under(A, STATE, "window.STATE =\n" + json.dumps(state, ensure_ascii=False, indent=2) + "\n")
 
 
 def beat(state):
@@ -116,7 +131,12 @@ def beat(state):
 
 
 def run_dir(state):
-    return os.path.join(A, state.get("dir") or "")
+    d = state.get("dir") or ""
+    if d and not RUN_DIR_RE.fullmatch(d):
+        # fullmatch, не match: "$" в Python пропускает хвостовое \n, а slug-гейт
+        # выше уже на fullmatch — оба гейта одного барьера обязаны делить примитив.
+        die("имя прогона %r не похоже на <дата>-<слаг>[--wip] — проверь dir в state.js" % d)
+    return os.path.join(A, d)
 
 
 def fresh_state(a):
@@ -206,8 +226,7 @@ def manifest_update(state, changes):
         lines[n] = "|" + "|".join(cells) + "|"
         touched.append(rid)
     if touched:
-        with open(path, "w", encoding="utf-8") as f:
-            f.write("\n".join(lines))
+        write_under(A, path, "\n".join(lines))
     return touched
 
 
@@ -413,10 +432,7 @@ def write_snapshot(state):
     payload = "window.STATE=" + json.dumps(state, ensure_ascii=False).replace("</", "<\\/") + ";"
     new = page[: i + len(BEGIN)] + payload + page[j:]
     if new != page:
-        tmp = PAGE + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write(new)
-        os.replace(tmp, PAGE)
+        write_under(A, PAGE, new)
     return "дашборд обновлён"
 
 
@@ -485,9 +501,26 @@ def recorded():
         return None, None
 
 
+def guarded_open(url, timeout, schemes, hosts):
+    """SSRF-гейт CWE-918: запрос только на allowlist схем и хостов.
+    Иных целей у ap.py нет: локальный дашборд и raw.githubusercontent.
+    Известный остаток: urlopen следует редиректам без повторного гейта —
+    для фиксированной пары хостов риск теоретический, см. бэклог ревью."""
+    u = urlsplit(url)
+    if u.scheme not in schemes or u.hostname not in hosts:
+        return None
+    return urllib.request.urlopen(url, timeout=timeout)
+
+
 def http_ok(port):
+    if not isinstance(port, int) or not (0 < port < 65536):
+        return False                                # port читается из serve.pid
     try:
-        with urllib.request.urlopen("http://127.0.0.1:%d/dashboard.html" % port, timeout=2) as r:
+        r = guarded_open("http://%s:%d/dashboard.html" % (LOOPBACK_HOST, port), 2,
+                         ("http",), (LOOPBACK_HOST,))
+        if r is None:
+            return False
+        with r:
             return r.status == 200
     except (urllib.error.URLError, OSError, ValueError):
         return False
@@ -547,8 +580,7 @@ def serve(state):
         return "сервер не запустился (%s) — дашборд открывается файлом: %s" % (e, PAGE)
     for _ in range(10):
         if http_ok(port):
-            with open(PIDF, "w", encoding="utf-8") as f:
-                f.write("%d %d\n" % (port, srv.pid))
+            write_under(A, PIDF, "%d %d\n" % (port, srv.pid))
             return "сервер поднят: http://localhost:%d/dashboard.html" % port
         try:
             srv.wait(timeout=0.5)
@@ -602,7 +634,10 @@ def check_update(state):
     except OSError:
         return None
     try:
-        with urllib.request.urlopen(REMOTE_SKILL, timeout=3) as r:
+        r = guarded_open(REMOTE_SKILL, 3, ("https",), (UPDATE_HOST,))
+        if r is None:
+            return None
+        with r:
             remote = _version(r.read(65536).decode("utf-8", "replace"))
     except (urllib.error.URLError, OSError, ValueError):
         return None
@@ -654,8 +689,7 @@ def register_row(state, status, result):
         lines[hit[-1]] = row
     else:
         lines.append(row)
-    with open(README, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + "\n")
+    write_under(A, README, "\n".join(lines) + "\n")
 
 
 def git_mv(src, dst):
@@ -711,6 +745,8 @@ def tests_pair(v):
 def cmd_init(opt):
     if not opt.get("slug"):
         die("init требует --slug")
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", opt["slug"]):
+        die("slug — латиница, цифры и дефис (получено: %r)" % opt["slug"])
     old = read_state()
     notes = []
     if old and not old.get("finishedAt") and not opt.get("force"):

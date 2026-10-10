@@ -8,6 +8,7 @@
 import importlib.util
 import json
 import os
+import pathlib
 import re
 import shutil
 import subprocess
@@ -80,8 +81,7 @@ class Run(unittest.TestCase):
     def write(self, rel, text):
         path = os.path.join(self.dir, rel)
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(text)
+        pathlib.Path(path).write_text(text, encoding="utf-8")
 
     def manifest(self):
         return read(os.path.join(self.dir, "manifest.md"))
@@ -115,6 +115,35 @@ class Run(unittest.TestCase):
         code, out = self.ap("init", "--slug", "other")
         self.assertNotEqual(code, 0)
         self.assertIn("продолжение", out)
+
+    def test_gates_reject_bad_slug_and_dir(self):
+        """CWE-22-гейты: слаг валидируется при init, подставленный dir в state.js
+        не проходит дальше run_dir ни в одной команде."""
+        code, out = self.ap("init", "--slug", "../bad")
+        self.assertNotEqual(code, 0)
+        self.assertIn("slug", out)
+        self.init()
+        raw = read(os.path.join(self.a, "state.js"))
+        bad = raw.replace('"dir": "%s"' % self.state()["dir"], '"dir": "../../evil"')
+        pathlib.Path(self.a, "state.js").write_text(bad, encoding="utf-8")
+        code, out = self.ap("sync")
+        self.assertNotEqual(code, 0)
+        self.assertIn("не похоже", out)
+
+    def test_dir_gate_is_fullmatch(self):
+        """Гейт dir на fullmatch: хвостовое \\n после подстановки в state.js
+        режется так же, как путь-траверс; легитимные имена проходят."""
+        self.init()
+        good = self.state()["dir"]
+        raw = read(os.path.join(self.a, "state.js"))
+        for suffix in ("\\n", "\\n-evil"):  # json-экран: dir распарсится с \n внутри
+            broken = raw.replace('"dir": "%s"' % good, '"dir": "%s%s"' % (good, suffix))
+            pathlib.Path(self.a, "state.js").write_text(broken, encoding="utf-8")
+            code, out = self.ap("sync")
+            self.assertNotEqual(code, 0, suffix)
+            self.assertIn("не похоже", out)
+        pathlib.Path(self.a, "state.js").write_text(raw, encoding="utf-8")
+        self.ap("sync")  # легитимный dir проходит
 
     def test_init_archives_finished_run(self):
         self.init()
