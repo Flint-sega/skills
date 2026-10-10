@@ -421,6 +421,20 @@ def audit(state):
 
 # ── страница и сервер ───────────────────────────────────────────────────────
 
+def stage_artifacts(state):
+    """Какие артефакты этапа лежат на диске — дашборд показывает их ссылками
+    в раскрытом этапе. Отсутствие файла — не ошибка: этап ещё не дошёл."""
+    base = run_dir(state) if state.get("dir") else A
+    for s in state.get("stages") or []:
+        art = ARTIFACT.get(s.get("id"))
+        found = sorted(os.path.relpath(p, base).replace(os.sep, "/")
+                       for p in glob.glob(os.path.join(base, art))) if art else []
+        if found:
+            s["art"] = found
+        else:
+            s.pop("art", None)
+
+
 def write_snapshot(state):
     try:
         page = open(PAGE, encoding="utf-8").read()
@@ -501,15 +515,28 @@ def recorded():
         return None, None
 
 
+class _Gate(urllib.request.HTTPRedirectHandler):
+    """Редирект проходит тот же allowlist, что и первый запрос: гейт не срыт
+    перебросом на чужой хост или схему."""
+
+    def __init__(self, schemes, hosts):
+        self.schemes, self.hosts = schemes, hosts
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        u = urlsplit(newurl)
+        if u.scheme not in self.schemes or u.hostname not in self.hosts:
+            raise urllib.error.URLError("redirect на %s вне allowlist" % newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def guarded_open(url, timeout, schemes, hosts):
-    """SSRF-гейт CWE-918: запрос только на allowlist схем и хостов.
-    Иных целей у ap.py нет: локальный дашборд и raw.githubusercontent.
-    Известный остаток: urlopen следует редиректам без повторного гейта —
-    для фиксированной пары хостов риск теоретический, см. бэклог ревью."""
+    """SSRF-гейт CWE-918: запрос только на allowlist схем и хостов, включая
+    каждый хоп редиректа. Иных целей у ap.py нет: локальный дашборд и
+    raw.githubusercontent."""
     u = urlsplit(url)
     if u.scheme not in schemes or u.hostname not in hosts:
         return None
-    return urllib.request.urlopen(url, timeout=timeout)
+    return urllib.request.build_opener(_Gate(schemes, hosts)).open(url, timeout=timeout)
 
 
 def http_ok(port):
@@ -888,6 +915,7 @@ def cmd_numbers(state, name, pos, multi):
 def cmd_finish(state, opt):
     t = now()
     notes = []
+    run_dir(state)      # гейт dir до любых перемещений: finish двигает папку прогона
     for s in state.get("stages") or []:
         if s.get("status") in ("active", "pending") and s.get("id") == "final":
             s["status"], s["finishedAt"] = "done", t
@@ -916,6 +944,7 @@ def cmd_finish(state, opt):
 
 def cmd_reopen(state):
     """Второй бриф в сданном прогоне: фазы 1–8 идут заново, прежние таски остаются."""
+    run_dir(state)      # гейт dir до перемещения папки
     d = state.get("dir") or ""
     if not d.endswith("--wip") and git_mv(d, d + "--wip"):
         state["dir"] = d + "--wip"
@@ -973,6 +1002,7 @@ def main():
             beat(state)
     recount(state)
     notes = close_passed(state) + notes
+    stage_artifacts(state)
     save(state)
     snap = write_snapshot(state)
     if cmd == "finish" or opt.get("stop"):

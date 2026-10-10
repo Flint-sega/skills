@@ -352,6 +352,39 @@ class Run(unittest.TestCase):
         self.assertEqual(self.stage("final")["status"], "pending")
         self.assertNotIn("finishedAt", self.stage("final"))
 
+    def test_finish_and_reopen_reject_traversed_dir(self):
+        """cmd_finish и cmd_reopen двигают папку прогона — гейт dir обязан
+        срабатывать до перемещения, а не в recount после него."""
+        self.init()
+        good = self.state()["dir"]
+        raw = read(os.path.join(self.a, "state.js"))
+        pathlib.Path(self.a, "state.js").write_text(
+            raw.replace('"dir": "%s"' % good, '"dir": "../../evil"'), encoding="utf-8")
+        code, out = self.ap("finish", "--result", "x")
+        self.assertNotEqual(code, 0)
+        self.assertIn("не похоже", out)
+        self.assertFalse(os.path.exists(os.path.join(self.root, "evil")))
+        pathlib.Path(self.a, "state.js").write_text(raw, encoding="utf-8")
+        self.ap("finish", "--result", "готово")
+        pathlib.Path(self.a, "state.js").write_text(
+            raw.replace('"dir": "%s"' % good, '"dir": "../../evil"'), encoding="utf-8")
+        code, out = self.ap("reopen")
+        self.assertNotEqual(code, 0)
+        self.assertIn("не похоже", out)
+
+    def test_stages_list_their_artifacts(self):
+        """Каждая синхронизация выгружает в state артефакты этапа, что лежат
+        на диске, — дашборд показывает их ссылками; без файла поля нет."""
+        self.init()
+        self.write("manifest.md", MANIFEST)
+        self.ap("stage", "spec")
+        st = self.stage("manifest")
+        self.assertEqual(st["art"], ["manifest.md"])
+        self.assertNotIn("art", self.stage("preflight"))
+        self.write("tickets/01-a.md", ticket("01", "A", "R01", "—", ["a/"], 1))
+        self.ap("stage", "build")
+        self.assertEqual(self.stage("plan")["art"], ["tickets/01-a.md"])
+
 
 class Pure(unittest.TestCase):
     """Функции без процесса: опознание своего сервера и версия навыка."""
@@ -375,6 +408,18 @@ class Pure(unittest.TestCase):
     def test_skill_declares_a_version(self):
         text = read(os.path.join(SKILL, "SKILL.md"))
         self.assertIsNotNone(self.m._version(text))
+
+    def test_guarded_open_rechecks_redirects(self):
+        """Редирект идёт через тот же allowlist, что и первый запрос."""
+        self.assertIsNone(self.m.guarded_open("http://example.com/", 1, ("http",), ("127.0.0.1",)))
+        gate = self.m._Gate(("http",), ("127.0.0.1",))
+        req = self.m.urllib.request.Request("http://127.0.0.1:1/a")
+        with self.assertRaises(self.m.urllib.error.URLError):
+            gate.redirect_request(req, None, 302, "Found", {}, "http://evil.example/x")
+        self.assertIsNotNone(
+            gate.redirect_request(req, None, 302, "Found", {}, "http://127.0.0.1:2/b"))
+        with self.assertRaises(self.m.urllib.error.URLError):
+            gate.redirect_request(req, None, 302, "Found", {}, "file:///etc/passwd")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,8 @@
     --bg:#f6f6f7; --panel:#ffffff; --ink:#18181b; --dim:#71717a; --line:#e7e7ea;
     --accent:#4f46e5; --ok:#059669; --warn:#d97706; --bad:#dc2626; --ghost:#f1f1f4; --info:#2563eb;
     --fix:#7c3aed;
-    --radius:16px; --glow:rgba(79,70,229,.32);
+    --radius:16px; --radius-sm:10px; --radius-xs:5px; --radius-pill:999px;
+    --glow:rgba(79,70,229,.32);
     --shadow:0 1px 2px rgba(24,24,27,.05), 0 6px 20px rgba(24,24,27,.06);
   }
   @media (prefers-color-scheme:dark){
@@ -40,10 +41,10 @@
   /* wrap на .top: в узкой панели переключатели уходят на вторую строку, а не за край */
   .top{display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
   .logo-word{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--ink);max-width:64vw}
-  .logo-word::before{content:"";display:inline-block;width:9px;height:9px;border-radius:99px;
+  .logo-word::before{content:"";display:inline-block;width:9px;height:9px;border-radius:var(--radius-pill);
     background:var(--accent);margin-right:9px;vertical-align:1px}
   .segs{margin-left:auto;display:flex;gap:8px;flex:0 0 auto}
-  .seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;
+  .seg{display:flex;border:1px solid var(--line);border-radius:var(--radius-pill);overflow:hidden;
     background:var(--panel);box-shadow:var(--shadow)}
   .seg button{appearance:none;border:0;background:transparent;color:var(--dim);cursor:pointer;
     font:600 11px/1 inherit;letter-spacing:.08em;padding:8px 12px;display:flex;align-items:center}
@@ -62,7 +63,7 @@
     line-height:1.2;overflow-wrap:anywhere;min-width:0}
   .badges{display:flex;gap:6px;flex-wrap:wrap;flex:0 0 auto}
   .badge{font-size:11px;letter-spacing:.04em;text-transform:uppercase;font-weight:650;
-    border:1px solid var(--bd,var(--line));border-radius:999px;padding:3px 10px;
+    border:1px solid var(--bd,var(--line));border-radius:var(--radius-pill);padding:3px 10px;
     color:var(--fg,var(--dim));background:var(--bbg,transparent)}
   /* режим — синяя семья, насыщенность растёт с автономией */
   .b-mode-1{--bbg:#eef2ff;--bd:#dbe1fb;--fg:#4a51b0}
@@ -83,17 +84,22 @@
   :root[data-theme="dark"] .b-mode-4{--bbg:#242858;--bd:#3f4690;--fg:#c9cdfd}
   :root[data-theme="dark"] .b-done{--bbg:#122619;--bd:#235037;--fg:#3ecf9a}
   .meta{font-size:12.5px;color:var(--dim);letter-spacing:.01em}
+  /* строка времени: часы сейчас + начало прогона + завершение (факт или оценка) */
+  .clockbar{display:flex;gap:14px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+  .clockbar .lbl{color:var(--dim)}
+  .clockbar b{font-weight:650}
+  .clockbar .eta{color:var(--accent)}
   /* ——— статус-строка «что происходит сейчас» ————————————————————————— */
   .status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-    background:var(--ghost);border-radius:12px;padding:10px 14px;margin-bottom:16px;
+    background:var(--ghost);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;
     font-size:13.5px;min-width:0}
   .status b{font-weight:650;font-variant-numeric:tabular-nums}
   .status .lbl{color:var(--dim)}
   .status .dim{color:var(--dim)}
   .status .ph{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);
-    border:1px solid var(--line);border-radius:999px;padding:1px 6px}
+    border:1px solid var(--line);border-radius:var(--radius-pill);padding:1px 6px}
   .status .nowclock{font-variant-numeric:tabular-nums;font-weight:650}
-  .status-dot{flex:none;width:9px;height:9px;border-radius:99px;background:var(--dim)}
+  .status-dot{flex:none;width:9px;height:9px;border-radius:var(--radius-pill);background:var(--dim)}
   .status-dot.ok{background:var(--ok)}
   .status-dot.run{background:var(--warn);animation:pulse 1.8s ease-in-out infinite}
   .status-dot.idle{background:var(--line)}
@@ -120,8 +126,8 @@
   .sub{font-size:12.5px;color:var(--dim);margin-top:6px;overflow-wrap:anywhere}
   .sub + .sub{margin-top:3px}
   /* прогресс-полоса: этапы по весам, внутри разработки — доля готовых тасков */
-  .bar{height:8px;background:var(--ghost);border-radius:99px;overflow:hidden;margin-top:12px}
-  .bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+  .bar{height:8px;background:var(--ghost);border-radius:var(--radius-pill);overflow:hidden;margin-top:12px}
+  .bar i{display:block;height:100%;background:var(--accent);border-radius:var(--radius-pill);transition:width .3s ease}
   .bar.lg{height:10px;margin-top:12px}
   /* ——— sparkline темпа из журнала пульса ——————————————————————————— */
   .spark-wrap{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
@@ -133,7 +139,7 @@
   .tl{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);padding:16px 18px;min-width:0}
   .tlsum{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-  .chip{font-size:11.5px;letter-spacing:.03em;border:1px solid var(--line);border-radius:999px;
+  .chip{font-size:11.5px;letter-spacing:.03em;border:1px solid var(--line);border-radius:var(--radius-pill);
     padding:3px 10px;color:var(--dim);font-variant-numeric:tabular-nums;background:var(--bg)}
   .chip.ok{border-color:var(--ok);color:var(--ok)}
   .chip.run{border-color:var(--warn);color:var(--warn)}
@@ -144,15 +150,15 @@
      этого не существовало, и по одному цвету их не различить */
   .fill .nm{overflow:hidden;text-overflow:ellipsis;min-width:0}
   .fill .ph{margin-left:8px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;
-    opacity:.9;border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:1px 6px;flex:none}
+    opacity:.9;border:1px solid rgba(255,255,255,.5);border-radius:var(--radius-pill);padding:1px 6px;flex:none}
   .wave{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:14px 0 8px}
   .wave:first-child{margin-top:0}
   /* minmax(0,1fr), а не 1fr: у 1fr пол — min-content, и длинное имя таска раздвигает сетку шире экрана */
   .row{display:grid;grid-template-columns:26px minmax(0,1fr) 56px;gap:10px;align-items:center;margin-bottom:6px;font-size:13px}
   .row b{font-weight:600;font-variant-numeric:tabular-nums;color:var(--dim)}
   .row.now b{color:var(--ink)}
-  .track{background:var(--ghost);border-radius:8px;height:24px;position:relative;overflow:hidden;min-width:0}
-  .fill{position:absolute;inset:0 auto 0 0;border-radius:8px;display:flex;align-items:center;
+  .track{background:var(--ghost);border-radius:var(--radius-sm);height:24px;position:relative;overflow:hidden;min-width:0}
+  .fill{position:absolute;inset:0 auto 0 0;border-radius:var(--radius-sm);display:flex;align-items:center;
     padding:0 9px;white-space:nowrap;font-size:12px;color:#fff;overflow:hidden}
   /* ждущий таск — пустой контур, а не залитая дорожка: плашка теперь во всю
      ширину, и без этого «ждёт» выглядело бы как ещё одно состояние заливки */
@@ -175,28 +181,48 @@
     .row.now .track{animation:none;box-shadow:0 0 0 3px var(--glow)}
     .fill.active::after{animation:none;background:none}
   }
-  /* ——— таймлайн этапов: вертикальная линия с точками состояний ————————— */
+  /* ——— таймлайн этапов: вертикальная линия, точка состояния и раскрывающееся тело ——— */
+  /* Строка этапа — кнопка: клик раскрывает «что сделано / что идёт / что дальше».
+     Рельса переехала на обёртку: линия тянется и сквозь раскрытое тело этапа. */
   .stages{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);padding:4px 18px;min-width:0}
-  .st{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:12px;align-items:start;
-    padding:10px 0;border-bottom:1px solid var(--line)}
+  .st{position:relative;border-bottom:1px solid var(--line)}
   .st:last-child{border-bottom:0}
-  .st .rail{position:relative;align-self:stretch;min-height:18px}
-  .st .rail::before{content:"";position:absolute;left:9px;top:-10px;bottom:-10px;width:1px;background:var(--line)}
-  .st:first-child .rail::before{top:9px}
-  .st:last-child .rail::before{bottom:calc(100% - 9px)}
-  .st .rail i{position:absolute;left:4px;top:3px;width:11px;height:11px;border-radius:99px;
-    box-sizing:border-box;border:2px solid var(--line);background:var(--panel)}
+  .st::before{content:"";position:absolute;left:27px;top:-10px;bottom:-10px;width:1px;background:var(--line)}
+  .st:first-child::before{top:10px}
+  .st:last-child::before{bottom:calc(100% - 10px)}
+  .st-head{appearance:none;border:0;background:none;width:100%;display:grid;
+    grid-template-columns:20px minmax(0,1fr) auto 16px;gap:12px;align-items:center;
+    padding:10px 0;cursor:pointer;font:inherit;color:var(--ink);text-align:left}
+  .st-head:hover{background:var(--ghost)}
+  .st-head .rail{position:relative;align-self:stretch;min-height:18px}
+  .st-head .rail i{position:absolute;left:4px;top:3px;width:11px;height:11px;
+    border-radius:var(--radius-pill);box-sizing:border-box;border:2px solid var(--line);
+    background:var(--panel)}
   .st.done .rail i{background:var(--ok);border-color:var(--ok)}
   .st.active .rail i{background:var(--warn);border-color:var(--warn);animation:pulse 1.6s ease-in-out infinite}
   @media (prefers-reduced-motion:reduce){.st.active .rail i{animation:none;box-shadow:0 0 0 3px var(--glow)}}
   .st.failed .rail i{background:var(--bad);border-color:var(--bad)}
   .st.skipped .rail i{border-style:dashed;background:var(--panel)}
-  .st>div{min-width:0}
+  .st-head .chevbox{display:flex;align-items:center;justify-content:center;color:var(--dim)}
+  .st-head .chev{width:14px;height:14px;transition:transform .18s ease}
+  .st.open .chev{transform:rotate(180deg)}
+  @media (prefers-reduced-motion:reduce){.st-head .chev{transition:none}}
+  .st-body{display:none;padding:2px 0 12px 32px;min-width:0}
+  .st.open .st-body{display:block}
+  .st-item{display:flex;gap:8px;align-items:baseline;padding:3px 0;font-size:13px;min-width:0}
+  /* значок состояния — не цветом единым: галка/крест/стрелка дублируют точку на рельсе */
+  .st-item .st-ic{flex:none;width:14px;text-align:center;color:var(--dim)}
+  .st-item.done .st-ic{color:var(--ok)}
+  .st-item.active .st-ic{color:var(--warn)}
+  .st-item.failed .st-ic{color:var(--bad)}
+  .st-item .nm{overflow-wrap:anywhere;min-width:0}
+  .st-item .mins{margin-left:auto;flex:none;font-variant-numeric:tabular-nums;color:var(--dim);font-size:12px}
+  .st-body a{color:var(--info);text-decoration:none;overflow-wrap:anywhere}
+  .st-body a:hover{text-decoration:underline}
   .st .nm{font-size:13.5px;overflow-wrap:anywhere}
   .st.active .nm{font-weight:700}
   .st.done .nm,.st.skipped .nm{color:var(--dim)}
-  .st .mins{padding-top:1px}
   .note{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);padding:14px 18px;font-size:13px;color:var(--dim)}
   .note b{color:var(--ink);font-weight:600}
@@ -211,7 +237,7 @@
   .panel-head:hover{background:var(--ghost)}
   .panel-head .pt{font-weight:650;font-size:14px;letter-spacing:-.01em}
   .panel-head .pcount{font-size:11px;color:var(--dim);background:var(--ghost);
-    border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-variant-numeric:tabular-nums}
+    border:1px solid var(--line);border-radius:var(--radius-pill);padding:1px 8px;font-variant-numeric:tabular-nums}
   .panel-head .chev{margin-left:auto;width:16px;height:16px;color:var(--dim);flex:none;
     transition:transform .18s ease}
   .panel.open .chev{transform:rotate(180deg)}
@@ -219,7 +245,7 @@
   .panel-body{display:none;padding:2px 18px 18px}
   .panel.open .panel-body{display:block}
   /* ——— скелетон до первого снапшота ——————————————————————————————— */
-  .skel{background:var(--ghost);border-radius:10px;animation:shimmer 1.5s ease-in-out infinite;min-width:0}
+  .skel{background:var(--ghost);border-radius:var(--radius-sm);animation:shimmer 1.5s ease-in-out infinite;min-width:0}
   .skel-line{height:18px;margin-bottom:12px}
   .w60{width:60%}
   .w40{width:40%}
@@ -236,8 +262,8 @@
     font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line)}
   td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
   tr:last-child td{border-bottom:0}
-  .dot{display:inline-block;width:7px;height:7px;border-radius:99px;margin-right:7px;vertical-align:1px}
-  .tag{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:5px;
+  .dot{display:inline-block;width:7px;height:7px;border-radius:var(--radius-pill);margin-right:7px;vertical-align:1px}
+  .tag{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:var(--radius-xs);
     padding:1px 5px;margin:0 3px 3px 0;color:var(--dim);font-variant-numeric:tabular-nums}
   .tag.ok{border-color:var(--ok);color:var(--ok)}
   .tag.part{border-color:var(--ok);border-style:dashed}
@@ -263,7 +289,8 @@
     .status{padding:9px 12px;margin-bottom:14px;font-size:13px}
     .grid,.grid.m{gap:10px}
     .row{grid-template-columns:24px 1fr 48px;gap:8px}
-    .st{grid-template-columns:18px 1fr auto;gap:9px}
+    .st-head{grid-template-columns:18px minmax(0,1fr) auto 14px;gap:9px}
+    .st-body{padding-left:27px}
     /* семь колонок в узкую панель не влезают ни при каком min-width, поэтому здесь
        таблица перестаёт требовать ширину, а второстепенные колонки уходят:
        требования, повторы и коммит есть в файлах, а «что и сколько идёт» — нет */
@@ -328,6 +355,15 @@ const plural = (n, one, few, many) => {
   return many;
 };
 
+// Экранирование живёт на уровне модуля: атрибуты таймеров (data-from) тоже
+// собираются за пределами render, и туда значение state попадает без затирания.
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const p2 = n => String(n).padStart(2, '0');
+// «14:05» из метки state.js и «14:05» из смещения в минутах — для строки времени в шапке.
+const hmOf = iso => { const d = iso ? new Date(iso) : null;
+  return d && !isNaN(d.getTime()) ? p2(d.getHours()) + ':' + p2(d.getMinutes()) : null; };
+const hmIn = ms => { const d = new Date(ms); return p2(d.getHours()) + ':' + p2(d.getMinutes()); };
+
 const I18N = {
   ru:{lang:"ru",coverage:"Покрытие брифа",ofReq:(a,b)=>`${a} из ${b} требований`,
     overall:"Прогресс проекта",overallStages:(a,b)=>`${a} из ${b} этапов пройдено`,
@@ -371,6 +407,8 @@ const I18N = {
     depths:{strict:"строго по брифу",normal:"обычная глубина",deep:"максимальная глубина"},
     tier:t=>`ярус ${t}`,finished:"завершено",min:"мин",hr:"ч",m:"м",
     statusFinished:"Прогон завершён",waitStart:"Ждёт старта — прогон ещё не начался",stagePrefix:"Этап:",
+    nowLbl:"сейчас",startLbl:"начало",finLbl:"завершение",est:"≈",
+    stStat:{done:"пройден",active:"идёт",pending:"ждёт",skipped:"пропущен",failed:"упал"},
     pace:"Темп",paceHint:"мало меток — график появится по ходу работы",
     langLabel:"Язык",themeLabel:"Тема",themeLight:"Светлая тема",themeDark:"Тёмная тема"},
   en:{lang:"en",coverage:"Brief coverage",ofReq:(a,b)=>`${a} of ${b} requirements`,
@@ -414,6 +452,8 @@ const I18N = {
     depths:{strict:"strictly as written",normal:"normal depth",deep:"maximum depth"},
     tier:t=>`tier ${t}`,finished:"finished",min:"min",hr:"h",m:"m",
     statusFinished:"Run finished",waitStart:"Waiting to start — the run hasn't begun",stagePrefix:"Stage:",
+    nowLbl:"now",startLbl:"started",finLbl:"finish",est:"≈",
+    stStat:{done:"passed",active:"running",pending:"waiting",skipped:"skipped",failed:"failed"},
     pace:"Pace",paceHint:"few beats yet — the chart fills in as work proceeds",
     langLabel:"Language",themeLabel:"Theme",themeLight:"Light theme",themeDark:"Dark theme"}
 };
@@ -429,6 +469,12 @@ let lastStamp = null;              // метка отрисованного со
 // Открытость свёртываемых блоков живёт между перерисовками в памяти страницы,
 // а не в localStorage: перезагрузка возвращает аккуратный закрытый вид.
 const openPanels = {debt:false, additions:false, blind:false};
+// Этапы: по умолчанию раскрыт активный («сейчас делается» видно сразу), клик
+// запоминается и переживает перерисовки — до перезагрузки страницы.
+const openStages = {};
+// Диапазон оставшихся минут из render: тикающая ETA в шапке пересчитывает
+// время на стене каждую секунду без перерисовки всего экрана.
+let ETA_RANGE = null;
 
 // ——— живые таймеры ———————————————————————————————————————————————
 // Всё время считается из меток state.js. Незакрытый интервал тикает от текущего момента.
@@ -495,15 +541,14 @@ function idleNow(){
 const fmtClock = ms => {
   if (ms == null) return '—';
   const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), ss = s%60;
-  const p = n => String(n).padStart(2,'0');
-  return h ? `${h}:${p(m)}:${p(ss)}` : `${m}:${p(ss)}`;
+  return h ? `${h}:${p2(m)}:${p2(ss)}` : `${m}:${p2(ss)}`;
 };
 // Открытый интервал получает data-live — его каждую секунду обновляет tick().
 function timerHTML(from, to){
   const ms = activeMs(from, to);
   if (ms == null) return '—';
   return to ? `<span>${fmtClock(ms)}</span>`
-            : `<span data-live data-from="${from}">${fmtClock(ms)}</span>`;
+            : `<span data-live data-from="${esc(from)}">${fmtClock(ms)}</span>`;
 }
 function agoText(iso){
   const ms = spanMs(iso, null);
@@ -515,6 +560,13 @@ function agoText(iso){
 }
 function tick(){
   const stopped = idleNow();
+  const cd = new Date();
+  document.querySelectorAll('[data-clock]').forEach(el => {
+    el.textContent = p2(cd.getHours()) + ':' + p2(cd.getMinutes()) + ':' + p2(cd.getSeconds());
+  });
+  if (ETA_RANGE) document.querySelectorAll('[data-eta]').forEach(el => {
+    el.textContent = `${CUR.est || '≈'} ${hmIn(Date.now() + ETA_RANGE[0]*60000)} … ${hmIn(Date.now() + ETA_RANGE[1]*60000)}`;
+  });
   document.querySelectorAll('[data-live][data-from]').forEach(el => {
     el.textContent = fmtClock(activeMs(el.dataset.from, null));
     el.classList.toggle('paused', stopped);          // часы стоят — видно, что это не поломка
@@ -588,8 +640,11 @@ function noStateMessage(){
 }
 
 // Одна подгрузка state.js; done(ok) — когда она закончилась.
+// Второй запрос во время летящего не теряется, а становится в очередь: раньше
+// «обновить» во время круга опроса глушило и колбэк, и вместе с ним весь опрос.
+let pendingPull = null;
 function pullState(done){
-  if (pulling) return;
+  if (pulling) { pendingPull = done; return; }
   pulling = true;
   const s = document.createElement('script');
   // Метка времени в запросе — иначе file:// отдаст скрипт из кеша.
@@ -609,6 +664,7 @@ function pullState(done){
     // Данных по-прежнему нет и сервер молчит — объяснить, а не держать скелетон вечно.
     if (!window.STATE && misses >= 2) bootFail(noStateMessage());
     if (done) done(ok);
+    if (pendingPull) { const next = pendingPull; pendingPull = null; pullState(next); }
   };
   s.onload = () => end(true);
   s.onerror = () => end(false);
@@ -659,7 +715,6 @@ function render(lang){
   CUR = L;
   const S = STATE, T = S.tickets || [], R = S.requirements || {};
   MARKS = collectMarks(S);
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   // Таск живёт в трёх активных состояниях, а не в одном: пишется — проверяется —
   // чинится. Ревью и ремонт идут, пока летит следующий таск, поэтому «готово 2 из 8»
   // без них — самый частый вопрос к экрану: «а с третьим-то что».
@@ -723,6 +778,7 @@ function render(lang){
   const cpMin = Math.max(0, ...T.map(t => chainMin(t.id, new Set())));
   const eta = (median && cpMin > 0)
     ? [Math.max(1, Math.round(cpMin*0.75)), Math.max(2, Math.round(cpMin*1.4))] : null;
+  ETA_RANGE = eta;      // тикающая ETA в шапке живёт от этого диапазона
 
   // Этапы: канонический порядок, поверх него — то, что прислал state.js.
   // Свой набор — незнакомый канону id или другой порядок — сам становится каноном
@@ -860,15 +916,50 @@ function render(lang){
       ${failedT.length ? `<span class="chip bad">${L.chipFailed(failedT.length)}</span>` : ''}
     </div>` : '';
 
-  // Лента этапов — она же ответ на «где мы сейчас», когда тасков нет вовсе.
+  // Лента этапов — аккордеон: клик по строке раскрывает «что сделано / что идёт /
+  // что дальше». По умолчанию раскрыт активный этап; выбор пользователя живёт
+  // до перезагрузки. Внутри: строка состояния со временем, причина пропуска,
+  // ссылки на файлы этапа (их отбирает ap.py в state) и таски для разработки.
+  const stStatusWord = s => (L.stStat || {})[s.status] || s.status || '';
+  const stageBody = s => {
+    const when = s.startedAt
+      ? `${hmOf(s.startedAt)}${s.finishedAt ? ' → ' + hmOf(s.finishedAt) : ''}` : '';
+    const rows = [`<div class="st-item"><span class="st-ic">${
+        s.status === 'done' ? '✓' : s.status === 'failed' ? '✗' : s.status === 'skipped' ? '–'
+        : s.status === 'active' ? '▸' : '○'}</span><span class="nm">${esc(stStatusWord(s))}${
+        when ? ' · ' + when : ''}</span></div>`];
+    if ((s.art || []).length) rows.push(`<div class="st-item"><span class="st-ic">→</span>` +
+      `<span class="nm">${(s.art || []).map(a =>
+        `<a href="${esc(S.dir)}/${esc(a)}">${esc(a)}</a>`).join(' · ')}</span></div>`);
+    if (s.id === 'build' && T.length) rows.push(T.map(t => {
+      const act = ACTIVE.includes(t.status);
+      const cls = t.status === 'done' ? 'done' : act ? 'active'
+        : t.status === 'failed' ? 'failed' : '';
+      const ic = t.status === 'done' ? '✓' : act ? '▸' : t.status === 'failed' ? '✗' : '○';
+      const mm = !t.startedAt ? '' : act ? timerHTML(t.startedAt, null)
+        : timerHTML(t.startedAt, t.finishedAt);
+      return `<div class="st-item${cls ? ' ' + cls : ''}"><span class="st-ic">${ic}</span>` +
+        `<span class="nm"><b>${esc(t.id)}</b> ${esc(t.title)}</span>` +
+        (mm ? `<span class="mins">${mm}</span>` : '') + `</div>`;
+    }).join(''));
+    return rows.join('');
+  };
   const stageRows = stages.map(s => {
+    const isOpen = openStages[s.id] !== undefined ? openStages[s.id] : s.status === 'active';
     const dur = s.status === 'skipped' ? L.skipped
       : s.startedAt ? timerHTML(s.startedAt, s.finishedAt)
       : `<span class="empty">${L.notStarted}</span>`;
-    return `<div class="st ${esc(s.status || 'pending')}">
-      <div class="rail"><i></i></div>
-      <div><div class="nm">${esc(stName(s))}</div>${s.note ? `<div class="sub">${esc(s.note)}</div>` : ''}</div>
-      <div class="mins">${dur}</div></div>`;
+    return `<div class="st ${esc(s.status || 'pending')}${isOpen ? ' open' : ''}">
+      <button type="button" class="st-head" data-stage="${esc(s.id)}" aria-expanded="${isOpen}"
+        title="${esc(stStatusWord(s))}" aria-label="${esc(stName(s))} — ${esc(stStatusWord(s))}">
+        <span class="rail"><i></i></span>
+        <span class="nm">${esc(stName(s))}${s.note
+          ? `<span class="sub" style="display:block">${esc(s.note)}</span>` : ''}</span>
+        <span class="mins">${dur}</span>
+        <span class="chevbox">${CHEV}</span>
+      </button>
+      <div class="st-body">${isOpen ? stageBody(s) : ''}</div>
+    </div>`;
   }).join('');
 
   const list = arr => arr && arr.length
@@ -887,7 +978,7 @@ function render(lang){
   });
   const rows = T.map(t => `<tr>
     <td><b>${esc(t.id)}</b></td>
-    <td><span class="dot" style="background:${statusColor(t.status)}"></span>${esc(t.title)}
+    <td><span class="dot" style="background:${statusColor(t.status)}" title="${esc(t.status)}"></span>${esc(t.title)}
       ${t.concerns?.length ? `<div class="sub">${esc(t.concerns.join('; '))}</div>` : ''}</td>
     <td>${(t.requirements||[]).map(r => {
       const st = reqState[r];
@@ -963,6 +1054,13 @@ function render(lang){
       </div>
     </div>
     <div class="meta">${metaParts.join(' · ')}</div>
+    <div class="meta clockbar">
+      <span><span class="lbl">${L.nowLbl}:</span> <b data-clock>—</b></span>
+      ${S.startedAt ? `<span><span class="lbl">${L.startLbl}:</span> <b title="${esc(S.startedAt)}">${hmOf(S.startedAt) || '—'}</b></span>` : ''}
+      ${S.finishedAt
+        ? `<span><span class="lbl">${L.finLbl}:</span> <b title="${esc(S.finishedAt)}">${hmOf(S.finishedAt) || '—'}</b></span>`
+        : (eta ? `<span><span class="lbl">${L.finLbl}:</span> <b class="eta" data-eta title="${L.left}">≈…</b></span>` : '')}
+    </div>
   </header>
 
   <div class="status">${statusLine()}</div>
@@ -1070,6 +1168,22 @@ function render(lang){
       openPanels[k] = !openPanels[k];
       b.closest('.panel').classList.toggle('open', openPanels[k]);
       b.setAttribute('aria-expanded', String(openPanels[k]));
+    }));
+
+  // Этапы-аккордеон: клик переключает открытость и дорисовывает тело лениво —
+  // закрытые этапы не тянут свои списки в DOM.
+  document.querySelectorAll('.st-head').forEach(b =>
+    b.addEventListener('click', () => {
+      const id = b.dataset.stage;
+      const s = stages.find(x => x.id === id);
+      if (!s) return;
+      const open = !(openStages[id] !== undefined ? openStages[id] : s.status === 'active');
+      openStages[id] = open;
+      b.setAttribute('aria-expanded', String(open));
+      const st = b.closest('.st');
+      st.classList.toggle('open', open);
+      const body = st.querySelector('.st-body');
+      if (body) body.innerHTML = open ? stageBody(s) : '';
     }));
 
   tick();
