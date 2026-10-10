@@ -98,6 +98,16 @@ class Run(unittest.TestCase):
         self.assertIn(".autopilot/serve.*", read(os.path.join(self.root, ".gitignore")))
         self.assertIn("window.STATE={", read(os.path.join(self.a, "dashboard.html")))
 
+    def test_snapshot_escapes_every_lt(self):
+        """Экранируется весь '<' в JSON-снапшоте: иначе <!--<script> в state
+        (например, в title) уводит HTML-токенизатор в double-escape — закрывающий
+        </script> не срабатывает и страница дашборда ломается."""
+        code, out = self.ap("init", "--slug", "tricky", "--title", "<!--<script>", "--skill-dir", SKILL)
+        self.assertEqual(code, 0, out)
+        page = read(os.path.join(self.a, "dashboard.html"))
+        self.assertNotIn("<!--<script>", page)
+        self.assertIn("\\u003c", page)
+
     def test_stage_accepts_foreign_slug_and_rejects_junk(self):
         """Свой набор стадий: латинский слаг принимается, мусор — нет."""
         self.init()
@@ -371,6 +381,24 @@ class Run(unittest.TestCase):
         code, out = self.ap("reopen")
         self.assertNotEqual(code, 0)
         self.assertIn("не похоже", out)
+
+    def test_init_rejects_traversed_archive_dir(self):
+        """cmd_init архивирует state.js прежнего прогона по dir из тампер-able
+        state.js — гейт обязан отсеять подделку до os.replace, а не после."""
+        self.init()
+        self.ap("finish", "--result", "готово")
+        good = self.state()["dir"]                      # финиш уже снял --wip с имени
+        os.makedirs(os.path.join(self.root, "evil"))    # цель архивации должна существовать
+        raw = read(os.path.join(self.a, "state.js"))
+        pathlib.Path(self.a, "state.js").write_text(
+            raw.replace('"dir": "%s"' % good, '"dir": "../evil"'), encoding="utf-8")
+        code, out = self.ap("init", "--slug", "next")
+        self.assertEqual(code, 0, out)                  # init продолжается, архивация пропущена
+        self.assertIn("не похож", out)
+        self.assertFalse(os.path.exists(os.path.join(self.root, "evil", "state.js")))
+        pathlib.Path(self.a, "state.js").write_text(raw, encoding="utf-8")
+        self.ap("init", "--slug", "third")              # контроль: легитимная архивация жива
+        self.assertTrue(os.path.exists(os.path.join(self.a, good, "state.js")))
 
     def test_stages_list_their_artifacts(self):
         """Каждая синхронизация выгружает в state артефакты этапа, что лежат

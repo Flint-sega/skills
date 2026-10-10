@@ -17,7 +17,7 @@ jobs:
         run: python -m py_compile tools/*.py skills/foreman/tools/ap.py tests/*.py
       - name: Frontmatter SKILL.md
         run: |
-          pip install -q pyyaml
+          pip install -q "pyyaml~=6.0"
           python tools/check_frontmatter.py
       - name: Хеш skills-lock актуален
         run: python tools/recompute-lock.py --check

@@ -443,7 +443,7 @@ def write_snapshot(state):
     i, j = page.find(BEGIN), page.find(END)
     if i < 0 or j < 0:
         return "страница без маркеров снимка — перекопируй dashboard.html из навыка"
-    payload = "window.STATE=" + json.dumps(state, ensure_ascii=False).replace("</", "<\\/") + ";"
+    payload = "window.STATE=" + json.dumps(state, ensure_ascii=False).replace("<", "\\u003c") + ";"
     new = page[: i + len(BEGIN)] + payload + page[j:]
     if new != page:
         write_under(A, PAGE, new)
@@ -779,10 +779,13 @@ def cmd_init(opt):
     if old and not old.get("finishedAt") and not opt.get("force"):
         die("идёт прогон %s — это продолжение, а не новый прогон (или --force)" % old.get("dir"))
     if old and old.get("dir") and os.path.isdir(os.path.join(A, old["dir"])):
-        dst = os.path.join(old["dir"], "state.js")
-        if subprocess.run(["git", "-C", A, "mv", "-f", "state.js", dst], capture_output=True).returncode:
-            os.replace(STATE, os.path.join(A, dst))
-        notes.append("прошлый прогон убран в архив: %s" % dst)
+        if RUN_DIR_RE.fullmatch(old["dir"]):
+            dst = os.path.join(old["dir"], "state.js")
+            if subprocess.run(["git", "-C", A, "mv", "-f", "state.js", dst], capture_output=True).returncode:
+                os.replace(STATE, os.path.join(A, dst))
+            notes.append("прошлый прогон убран в архив: %s" % dst)
+        else:
+            notes.append("! прежний dir %r не похож на имя прогона — архивация пропущена" % old["dir"])
     state = fresh_state(opt)
     os.makedirs(os.path.join(run_dir(state), "tickets"), exist_ok=True)
     save(state)
