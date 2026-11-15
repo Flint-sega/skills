@@ -68,17 +68,19 @@ Immediately after `init`, before Phase 1 asks anything.
 | a ticket goes to point review | `ticket 02 review` |
 | a blocking finding goes back | `ticket 02 repair --note "условие одной строкой"` |
 | a failed ticket restarts | `ticket 02 retry` |
-| committed | `ticket 02 done --tests 34/0 --commit <sha>` (+ `--placeholder R05` for a stubbed row) — closes the manifest rows whose tickets are all done |
-| failed for good | `ticket 02 fail --note "что блокирует"` |
+| committed | `ticket 02 done --tests 34/0 --commit <sha>` — refused without a commit (+ `--placeholder R05` for a stubbed row) — closes the manifest rows whose tickets are all done |
+| failed for good | `ticket 02 fail --note "что блокирует"` — after it the ticket refuses every command but the next row |
+| the user unblocked a failed ticket | `ticket 02 reset --by-user "их слова"` — counters back to zero |
 | a deferred finding | `add concerns "файл:строка — что не так"` |
 | a stub, an assumption, an empty variable | `add debt.placeholders "…"` · `add debt.assumptions "…"` · `add debt.emptyEnv NAME` |
 | an `A##` that reached the code | `add additions "что — ради R01"` |
 | a finding for the final report | `add report "…"` |
 | G2 result | `coverage found=2 fixed=1 deferred=1 --item "R07 — отложено: …"` |
-| blind acceptance | one call: `blind checked=12 matched=11 --mismatch "R07 — статус не виден" --mismatch "…"` |
+| blind acceptance | one call: `blind checked=12 matched=11 --mismatch "R07 — статус не виден" --mismatch "…"` — twice per run at most, the second after `F2` |
 | a full check outside a ticket | `tests 34/0` |
 | the run stops to wait for the user | `ask briefing|spec|plan|action|stop --note "чего ждём, одной строкой"` — waiting time leaves the run's clock; closed by `answered` or the next working call. The note names what is awaited, never the answer itself |
-| the run lands | `finish --result "одна строка: что теперь есть"` |
+| the run lands | `finish --result "одна строка: что теперь есть"` — refused while a check is red or unrun, or a ticket is unfinished or has no commit in `HEAD` (`phases/8-final.md`) |
+| the user lands it as it is | `finish --result "…" --by-user "их слова"` — «Сдано с оговорками», what stayed open is recorded |
 | a resume, before anything relaunches | `commits` — every `done` ticket's commit still in `HEAD`; a `!` line is a ticket to reset (`phases/0-resume.md`) |
 
 All are `python3 .autopilot/ap.py …`, and `add` takes several values in one call. **Chain a call with the command it belongs to**, so one event is one turn — the commit of a ticket and its `done` go together (`phases/5-subagents.md`, step 7). Never chain a commit after a check whose result you have not read: `| tail` always exits 0.

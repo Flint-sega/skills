@@ -13,16 +13,18 @@
     python3 .autopilot/ap.py ticket 02 03 start         # волна ушла
     python3 .autopilot/ap.py ticket 02 review
     python3 .autopilot/ap.py ticket 02 repair --note "пустой адрес проходит — R01.1"
-    python3 .autopilot/ap.py ticket 02 done --tests 34/0 --commit a1b2c3d
-    python3 .autopilot/ap.py ticket 03 retry | fail --note "…" | reset
+    python3 .autopilot/ap.py ticket 02 done --tests 34/0 --commit a1b2c3d   # без --commit отклоняется
+    python3 .autopilot/ap.py ticket 03 retry | fail --note "…" | reset   # retry и repair — не больше двух
+    python3 .autopilot/ap.py ticket 03 reset --by-user "«давай ещё раз, ключ добавил»"   # упавший — только так
     python3 .autopilot/ap.py stage build done | fail --note "…"
     python3 .autopilot/ap.py add concerns "src/notify.ts:40 — два формата даты"
     python3 .autopilot/ap.py add debt.emptyEnv TELEGRAM_BOT_TOKEN
     python3 .autopilot/ap.py coverage found=2 fixed=1 deferred=1 --item "R07 — отложено: …"
     python3 .autopilot/ap.py add report "Два формата даты в уведомлениях — оставлено"
-    python3 .autopilot/ap.py blind checked=12 matched=11 --mismatch "R07 — статус не виден"
+    python3 .autopilot/ap.py blind checked=12 matched=11 --mismatch "R07 — статус не виден"   # два раза за прогон
     python3 .autopilot/ap.py tests 34/0                 # последний полный прогон
     python3 .autopilot/ap.py finish --result "Бот принимает заявки и пишет их в таблицу"
+    python3 .autopilot/ap.py finish --result "…" --by-user "«сдавай как есть»"   # если finish отказал
     python3 .autopilot/ap.py reopen                     # второй бриф в сданном прогоне
     python3 .autopilot/ap.py ask briefing --note "три вопроса в чате"   # ждём пользователя
     python3 .autopilot/ap.py answered                   # пользователь ответил
@@ -867,6 +869,30 @@ def close_requirements(state, tk, opt, t):
     manifest_update(state, changes)
 
 
+CAP = 2      # дозапросов и свежих перезапусков на таск — phases/5-repair.md
+
+
+def refuse_ticket(tk, act, by_user, commit):
+    """Лимиты ремонта — не совет, а отказ: оркестратор долгого прогона забывает
+    текст правила, а отказ команды забыть нельзя. Упавший таск снова пускает
+    в работу только пользователь — его словами в --by-user."""
+    i = tk["id"]
+    if tk.get("status") == "failed":
+        if act == "reset" and by_user:
+            return
+        die("таск %s упал — дальше решает пользователь. Скажи ему, что блокирует, и жди ответа; "
+            "перезапуск только по его словам: ticket %s reset --by-user \"<цитата>\"" % (i, i))
+    if act == "retry" and tk.get("retries", 0) >= CAP:
+        die("таск %s: два свежих перезапуска уже были — третьего нет. "
+            "ticket %s fail --note \"что блокирует\" и вопрос пользователю" % (i, i))
+    if act == "repair" and tk.get("repairs", 0) >= CAP:
+        die("таск %s: два дозапроса уже были — дальше свежий контекст (ticket %s retry) "
+            "или fail с вопросом пользователю" % (i, i))
+    if act == "done" and not commit and not tk.get("commit"):
+        die("таск %s: нет --commit — сдан только закоммиченный таск. Git отказал — это сбой машины, "
+            "не ремонт: ticket %s fail --note \"что ответил git\" и вопрос пользователю" % (i, i))
+
+
 def cmd_ticket(state, pos, opt):
     acts = [p for p in pos if p in TICKET_STATUSES]
     ids = [p for p in pos if p not in TICKET_STATUSES]
@@ -874,11 +900,15 @@ def cmd_ticket(state, pos, opt):
         die("ticket <id…> start|review|repair|done|fail|retry|reset")
     act = acts[0]
     known = {t["id"]: t for t in state.get("tickets") or []}
+    by_user = opt.get("by-user") if isinstance(opt.get("by-user"), str) else None
     t = now()
-    for i in ids:
+    for i in ids:                                    # сначала все отказы — потом запись
         tk = known.get(i)
         if tk is None:
             die("таска %s нет — сначала `ap.py tickets`" % i)
+        refuse_ticket(tk, act, by_user, opt.get("commit") if isinstance(opt.get("commit"), str) else None)
+    for i in ids:
+        tk = known[i]
         tk["status"] = TICKET_STATUSES[act]
         if act == "start":
             tk.setdefault("startedAt", t)
@@ -898,6 +928,9 @@ def cmd_ticket(state, pos, opt):
         elif act == "reset":
             for k in ("startedAt", "finishedAt"):
                 tk.pop(k, None)
+            if by_user:
+                tk.setdefault("reopenedByUser", []).append(by_user)
+                tk["repairs"] = tk["retries"] = 0
         if act == "done":
             close_requirements(state, tk, opt, t)
         if opt.get("tests"):
@@ -930,6 +963,7 @@ def cmd_add(state, pos):
 
 
 NUMBERS = {"coverage": ("found", "fixed", "deferred"), "blind": ("checked", "matched")}
+BLIND_ROUNDS = 2    # слепая приёмка и одна перепроверка — phases/8-final.md
 
 
 def cmd_numbers(state, name, pos, multi):
@@ -949,16 +983,59 @@ def cmd_numbers(state, name, pos, multi):
     if name == "blind":
         if d["matched"] > d["checked"]:
             die("blind: matched=%d больше checked=%d" % (d["matched"], d["checked"]))
+        # Приёмка и одна перепроверка после таска F2 — третьего круга нет:
+        # каждый прогон находит новое, и «ещё один круг» не кончается никогда.
+        rounds = state.get("blindRounds", 0)
+        if rounds >= BLIND_ROUNDS:
+            die("blind: приёмка и её перепроверка уже были — третьего круга нет. "
+                "Что ещё расходится — add report \"…\" и в отчёт как известный баг")
+        state["blindRounds"] = rounds + 1
         d["mismatches"] = multi.get("mismatch", [])
     else:
         d["items"] = multi.get("item", [])
     state[name] = d
 
 
+def landing_problems(state):
+    """Что мешает назвать сборку сданной: (отказ, оговорка). Отказ останавливает finish;
+    оговорка — расхождение, оставшееся после обеих приёмок: чинить его больше нечем,
+    сборка сдаётся, но не зелёной. У foreman гейты — регламент, не код, поэтому гейт
+    здесь — его след в state: манифест для G1, coverage для G2, planOk для G3, blind для G4."""
+    refuse, caveat = [], []
+    rows = manifest_rows(state) or []
+    open_reqs = [i for i, st in rows if not i.startswith("D") and st == "open"]
+    if open_reqs:
+        refuse.append("G1: открытых требований — %d" % len(open_reqs))
+    if state.get("coverage") is None:
+        refuse.append("G2: спецификация не сверена с брифом")
+    if not state.get("planOk"):
+        refuse.append("G3: трасса манифест ↔ таски не сверена")
+    if state.get("blind") is None:
+        refuse.append("G4: слепой приёмки не было")
+    else:
+        n = len((state.get("blind") or {}).get("mismatches") or [])
+        if n:
+            line = "G4: расхождений с брифом — %d" % n
+            (caveat if state.get("blindRounds", 0) >= BLIND_ROUNDS else refuse).append(line)
+    for tk in state.get("tickets") or []:
+        if tk.get("status") != "done":
+            refuse.append("таск %s: %s" % (tk["id"], tk.get("status")))
+        elif not tk.get("commit"):
+            refuse.append("таск %s: сдан без коммита" % tk["id"])
+    refuse += ["таск %s: коммита %s нет в истории" % pair for pair in lost_commits(state)]
+    return refuse, caveat
+
+
 def cmd_finish(state, opt):
+    run_dir(state)      # гейт dir до любых перемещений: finish двигает папку прогона
+    refuse, caveat = landing_problems(state)
+    by_user = opt.get("by-user") if isinstance(opt.get("by-user"), str) else None
+    if refuse and not by_user:
+        die("сборка не сдана:\n  ! %s\nПочини это. Починить нельзя — скажи пользователю, что не так; "
+            "сдать как есть можно только по его словам: finish --result \"…\" --by-user \"<цитата>\""
+            % "\n  ! ".join(refuse))
     t = now()
     notes = []
-    run_dir(state)      # гейт dir до любых перемещений: finish двигает папку прогона
     for s in state.get("stages") or []:
         if s.get("status") in ("active", "pending") and s.get("id") == "final":
             s["status"], s["finishedAt"] = "done", t
@@ -967,9 +1044,10 @@ def cmd_finish(state, opt):
             s["status"], s["finishedAt"] = "done", t
         elif s.get("status") == "pending":
             s["status"], s["note"], s["finishedAt"] = "skipped", s.get("note") or "не понадобился", t
-    for tk in state.get("tickets") or []:
-        if tk.get("status") in ("in-progress", "review", "repair", "pending"):
-            notes.append("! таск %s закрыт незавершённым (%s)" % (tk["id"], tk["status"]))
+    problems = refuse + caveat
+    if problems:
+        state["landedWith"] = dict({"problems": problems}, **({"byUser": by_user} if refuse else {}))
+        notes += ["! сдано с оговоркой — " + p for p in problems]
     d = state.get("dir") or ""
     if d.endswith("--wip"):
         new = d[: -len("--wip")]
@@ -981,7 +1059,8 @@ def cmd_finish(state, opt):
         else:
             notes.append("! не смог переименовать %s — оставляю как есть" % d)
     state["finishedAt"] = t
-    register_row(state, "сдан", opt.get("result") if isinstance(opt.get("result"), str) else None)
+    state["result"] = opt.get("result") if isinstance(opt.get("result"), str) else None
+    register_row(state, "сдан с оговорками" if problems else "сдан", state["result"])
     return notes
 
 
@@ -993,6 +1072,10 @@ def cmd_reopen(state):
         state["dir"] = d + "--wip"
     state["finishedAt"] = None
     state["blind"] = None
+    state["blindRounds"] = 0
+    state["planOk"] = None
+    state["result"] = None
+    state.pop("landedWith", None)
     for s in state.get("stages") or []:
         if s.get("id") != "preflight":
             for k in ("startedAt", "finishedAt", "note"):
@@ -1002,11 +1085,9 @@ def cmd_reopen(state):
     register_row(state, "в работе", None)
 
 
-def cmd_commits(state):
-    """Возобновление верит state.js, а история могла уйти из-под него: reset, rebase,
-    другая ветка. Сданный таск, чьего коммита нет в HEAD, — строка «!»; сбрасывает
-    его оркестратор, потому что код после rebase может лежать на месте под другим sha."""
-    notes = []
+def lost_commits(state):
+    """[(таск, sha)] — сданные таски, чьего коммита нет в HEAD."""
+    lost = []
     for tk in state.get("tickets") or []:
         c = tk.get("commit")
         if tk.get("status") != "done" or not c:
@@ -1014,9 +1095,16 @@ def cmd_commits(state):
         r = subprocess.run(["git", "-C", ROOT, "merge-base", "--is-ancestor", c, "HEAD"],
                            capture_output=True)
         if r.returncode:
-            notes.append("! таск %s: коммита %s нет в истории — `ap.py ticket %s reset`"
-                         % (tk["id"], c, tk["id"]))
-    return notes or ["коммиты сданных тасков на месте"]
+            lost.append((tk["id"], c))
+    return lost
+
+
+def cmd_commits(state):
+    """Возобновление верит state.js, а история могла уйти из-под него: reset, rebase,
+    другая ветка. Сданный таск, чьего коммита нет в HEAD, — строка «!»; сбрасывает
+    его оркестратор, потому что код после rebase может лежать на месте под другим sha."""
+    return (["! таск %s: коммита %s нет в истории — `ap.py ticket %s reset`" % (i, c, i)
+             for i, c in lost_commits(state)] or ["коммиты сданных тасков на месте"])
 
 
 def close_wait(state):
@@ -1076,6 +1164,7 @@ def main():
             notes.append(publish_tickets(state))
         elif cmd == "check-plan":
             problems = check_plan(state)
+            state["planOk"] = not problems     # гард финиша: «Сдано» значит сдано
             notes += ["! " + p for p in problems] or ["G3: трасса сходится"]
         elif cmd == "set":
             cmd_set(state, rest)

@@ -464,7 +464,7 @@ const I18N = {
     modes:{full:"полный автомат",semi:"полуавтомат",interview:"интервью",manual:"ручной"},
     depths:{strict:"строго по брифу",normal:"обычная глубина",deep:"максимальная глубина"},
     tier:t=>`ярус ${t}`,finished:"завершено",min:"мин",hr:"ч",m:"м",
-    statusFinished:"Прогон завершён",waitStart:"Ждёт старта — прогон ещё не начался",stagePrefix:"Этап:",
+    statusFinished:"Прогон завершён",doneWarnState:"Сдано с оговорками",doneWarn:n=>`не закрыто: ${n}`,waitStart:"Ждёт старта — прогон ещё не начался",stagePrefix:"Этап:",
     nowLbl:"сейчас",startLbl:"начало",finLbl:"завершение",est:"≈",
     stStat:{done:"пройден",active:"идёт",pending:"ждёт",skipped:"пропущен",failed:"упал"},
     pace:"Темп",paceHint:"мало меток — график появится по ходу работы",
@@ -509,7 +509,7 @@ const I18N = {
     modes:{full:"fully automatic",semi:"semi-automatic",interview:"interview",manual:"manual"},
     depths:{strict:"strictly as written",normal:"normal depth",deep:"maximum depth"},
     tier:t=>`tier ${t}`,finished:"finished",min:"min",hr:"h",m:"m",
-    statusFinished:"Run finished",waitStart:"Waiting to start — the run hasn't begun",stagePrefix:"Stage:",
+    statusFinished:"Run finished",doneWarnState:"Done with caveats",doneWarn:n=>`still open: ${n}`,waitStart:"Waiting to start — the run hasn't begun",stagePrefix:"Stage:",
     nowLbl:"now",startLbl:"started",finLbl:"finish",est:"≈",
     stStat:{done:"passed",active:"running",pending:"waiting",skipped:"skipped",failed:"failed"},
     pace:"Pace",paceHint:"few beats yet — the chart fills in as work proceeds",
@@ -919,8 +919,12 @@ function render(lang){
   // один этап не активен. Финиш — итоговая формулировка с суммарным временем.
   const statusLine = () => {
     if (S.finishedAt) {
-      return `<span class="status-dot ok"></span><b>${L.statusFinished}</b>` +
-        `<span class="lbl"> · ${fmtClock(spanMs(S.startedAt, S.finishedAt))}</span>`;
+      // «Сдано» зелёное только на чистой сдаче: finish пишет, что осталось не закрытым.
+      const W = S.landedWith;
+      const head = W ? L.doneWarnState : L.statusFinished;
+      const extra = W ? ` · ${L.doneWarn(W.problems.length)}` : '';
+      return `<span class="status-dot${W ? '' : ' ok'}"></span><b>${head}</b>` +
+        `<span class="lbl"> · ${fmtClock(spanMs(S.startedAt, S.finishedAt))}${extra}</span>`;
     }
     if (running.length) {
       const wl = [...new Set(running.map(t => t.wave ?? 1))].sort((a,b) => a-b);
