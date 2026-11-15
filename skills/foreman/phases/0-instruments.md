@@ -79,6 +79,7 @@ Immediately after `init`, before Phase 1 asks anything.
 | a full check outside a ticket | `tests 34/0` |
 | the run stops to wait for the user | `ask briefing|spec|plan|action|stop --note "чего ждём, одной строкой"` — waiting time leaves the run's clock; closed by `answered` or the next working call. The note names what is awaited, never the answer itself |
 | the run lands | `finish --result "одна строка: что теперь есть"` |
+| a resume, before anything relaunches | `commits` — every `done` ticket's commit still in `HEAD`; a `!` line is a ticket to reset (`phases/0-resume.md`) |
 
 All are `python3 .autopilot/ap.py …`, and `add` takes several values in one call. **Chain a call with the command it belongs to**, so one event is one turn — the commit of a ticket and its `done` go together (`phases/5-subagents.md`, step 7). Never chain a commit after a check whose result you have not read: `| tail` always exits 0.
 

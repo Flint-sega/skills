@@ -16,6 +16,9 @@ Claude Code: слэши заменяются дефисами внутри ~/.cl
 харнесс логи так не раскладывает — для него каталог передаётся явно через
 --logs-dir (формат строк тот же: JSONL с message.usage у ассистентских шагов).
 
+«Шаг» — один вызов модели (уникальный message.id), а не строка лога.
+До 2026-10-12 скрипт считал строки и завышал расход примерно вдвое.
+
 Нормировка стоимости — относительно входного токена:
     output ×5 · cache_write ×1.25 · cache_read ×0.1
 Это пропорции, а не деньги: они нужны, чтобы сравнивать прогоны между собой.
@@ -38,6 +41,8 @@ for _s in (sys.stdout, sys.stderr):                     # cp1251-консоль 
 W_OUT, W_WRITE, W_READ = 5.0, 1.25, 0.1
 IDLE_GAP_SEC = 300          # пауза длиннее — это простой, а не работа
 CEILING_HINT = 120_000      # ориентир для колонки «перебор»: выше — контекст раздут
+EXEC_LOW = 150_000          # таск на ~3K строк кончается около 300–400K; ниже половины — стоило слить с соседом
+EXEC_HIGH = 450_000         # выше — таск вышел далеко за ~3K строк: его стоило поделить
 
 
 # Роль субагента — по описанию, которое ему дал оркестратор. Порядок важен:
@@ -49,7 +54,7 @@ ROLES = [
     ("приёмка", r"слеп|blind|покрыт|coverage|\bg2\b"),
     ("память", r"памят|memory|\badr\b|claude\.md|agents\.md"),
     ("разведка", r"развед|explor|notes"),
-    ("исполнитель", r"таск|ticket|исполн|executor"),
+    ("исполнитель", r"таск|ticket|исполн|executor|^t?\d{2}\b"),
 ]
 
 
@@ -96,6 +101,10 @@ def analyse(path, label):
     out = win = rin = cold = 0
     test_edits = code_edits = test_runs = 0
     stamps = []
+    # Один ответ модели пишется в лог несколькими строками — мысли, текст, вызов
+    # инструмента — с одним message.id и одним usage. Считать его надо один раз,
+    # по последней строке: в ней итоговое число выходных токенов.
+    usage = {}
 
     for r in rows:
         m = r.get("message") or {}
@@ -104,18 +113,8 @@ def analyse(path, label):
             stamps.append(ts)
         if (m.get("role") or r.get("type")) != "assistant":
             continue
-        u = m.get("usage") or {}
-        if u:
-            cr = u.get("cache_read_input_tokens", 0) or 0
-            cw = u.get("cache_creation_input_tokens", 0) or 0
-            ip = u.get("input_tokens", 0) or 0
-            out += u.get("output_tokens", 0) or 0
-            win += cw
-            rin += cr
-            if cw > 20_000:
-                cold += 1
-            if cr + cw + ip:
-                ctx.append(cr + cw + ip)
+        if m.get("usage"):
+            usage[m.get("id") or id(m)] = m["usage"]
         for c in m.get("content") or []:
             if not isinstance(c, dict) or c.get("type") != "tool_use":
                 continue
@@ -132,6 +131,18 @@ def analyse(path, label):
                     test_edits += 1
                 else:
                     code_edits += 1
+
+    for u in usage.values():
+        cr = u.get("cache_read_input_tokens", 0) or 0
+        cw = u.get("cache_creation_input_tokens", 0) or 0
+        ip = u.get("input_tokens", 0) or 0
+        out += u.get("output_tokens", 0) or 0
+        win += cw
+        rin += cr
+        if cw > 20_000:
+            cold += 1
+        if cr + cw + ip:
+            ctx.append(cr + cw + ip)
 
     stamps.sort()
     active = idle = 0
@@ -261,6 +272,16 @@ def main():
     cold_agents = [r for r in results if r["read"] and r["write"] / r["read"] > 0.10]
     print(f"  контекстов с протухшим кэшем (запись/чтение > 10%): {len(cold_agents)}"
           + (f" — {', '.join(r['label'][:24] for r in cold_agents[:4])}" if cold_agents else " — нет"))
+
+    execs = [r for r in results if role_of(r["label"]) == "исполнитель" and r["steps"]]
+    if execs:
+        print("\nНагрузка исполнителей (цель — ~3K строк на таск, обычно 300–400K контекста)")
+        low = [r for r in execs if r["max_ctx"] < EXEC_LOW]
+        high = [r for r in execs if r["max_ctx"] > EXEC_HIGH]
+        print(f"  недогружены, макс. < {EXEC_LOW//1000}K — кандидаты на слияние: {len(low)}"
+              + (f" — {', '.join(r['label'][:24] for r in low)}" if low else " — нет"))
+        print(f"  перегружены, макс. > {EXEC_HIGH//1000}K — стоило поделить: {len(high)}"
+              + (f" — {', '.join(r['label'][:24] for r in high)}" if high else " — нет"))
 
     act = sum(r["active"] for r in results)
     idl = sum(r["idle"] for r in results)

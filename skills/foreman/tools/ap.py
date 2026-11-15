@@ -26,6 +26,7 @@
     python3 .autopilot/ap.py reopen                     # второй бриф в сданном прогоне
     python3 .autopilot/ap.py ask briefing --note "три вопроса в чате"   # ждём пользователя
     python3 .autopilot/ap.py answered                   # пользователь ответил
+    python3 .autopilot/ap.py commits                    # коммиты сданных тасков ещё в истории?
     python3 .autopilot/ap.py                            # просто синхронизировать
 
 После каждой команды: updatedAt = сейчас (и метка в журнале beats), счётчики требований — из manifest.md,
@@ -34,7 +35,7 @@
 Ожидание пользователя (ask … answered) в рабочее время не входит: часы дашборда
 его не считают, это не работа сборки.
 
-Флаги: --check-update (сверить версию навыка с GitHub), --no-serve, --stop.
+Флаги: --check-update (сверить версию навыка с GitHub), --no-serve, --stop, --help.
 Работает на macOS, Linux и Windows (в том числе из Git Bash).
 """
 
@@ -268,12 +269,22 @@ def parse_ticket(path):
     return {
         "id": tid, "title": title,
         "requirements": ids(get("требования", "requirements")),
-        "blockedBy": [x.zfill(2) for x in re.findall(r"\d+", get("зависит от", "blocked by"))],
+        "blockedBy": re.findall(r"[A-Za-z]*\d+[a-z]?", get("зависит от", "blocked by")),
         "wave": int(wave.group()) if wave else None,
         "zone": re.findall(r"`([^`]+)`", get("зона", "zone")),
         "review": get("ревью", "review") or None,
         "model": get("модель", "model") or None,
     }
+
+
+def dep_id(ref, ids):
+    """Ссылка из «Зависит от» → id таска. `2`, `02`, `T2` — это таск 02; ссылка, которая
+    сама есть id таска (`F1`, `E34`), остаётся как есть; любая другая — тоже как есть,
+    и check-plan назовёт её несуществующей. Цифры из чужой ссылки не вынимаются никогда."""
+    if ref in ids:
+        return ref
+    m = re.match(r"^[Tt]?(\d+)$", ref)
+    return m.group(1).zfill(2) if m else ref
 
 
 def publish_tickets(state):
@@ -293,6 +304,9 @@ def publish_tickets(state):
         t.setdefault("retries", 0)
         t.setdefault("repairs", 0)
         out.append(t)
+    ids = {t["id"] for t in out}
+    for t in out:
+        t["blockedBy"] = [dep_id(b, ids) for b in t["blockedBy"]]
     state["tickets"] = out
     rows = dict(manifest_rows(state) or [])
     where = {}
@@ -700,6 +714,8 @@ README_TEXT = """# Как читать эту папку
   - `<дата>-brief.md` — твоя задача слово в слово и «Дополнения» — всё, что ты сказал позже.
   - `manifest.md` — список требований и что с каждым стало.
   - `spec.md` — спецификация. `tickets/` — таски, на которые разбита сборка.
+- `PROGRESS.md` — что осталось после последней сборки: не доделано, известные баги,
+  о чём договорились. Мелкие правки без прогона дописываются сюда же.
 
 Если сборка прервалась — скажи агенту «продолжи прогон», он поднимет состояние отсюда.
 
@@ -913,12 +929,26 @@ def cmd_add(state, pos):
             tgt.append(v)
 
 
+NUMBERS = {"coverage": ("found", "fixed", "deferred"), "blind": ("checked", "matched")}
+
+
 def cmd_numbers(state, name, pos, multi):
+    """Числа решают, что попадёт в отчёт и на дашборд, поэтому без всех чисел команда
+    ничего не пишет: пропавший счётчик — не ноль, а незаписанный результат."""
+    keys = NUMBERS[name]
+    usage = "%s %s" % (name, " ".join(k + "=N" for k in keys))
     d = {}
     for p in pos:
-        k, _, v = p.partition("=")
-        d[k] = int(v) if v.isdigit() else v
+        k, eq, v = p.partition("=")
+        if not eq or k not in keys or not v.isdigit():
+            die("%s: не понял «%s» — пишется так: %s" % (name, p, usage))
+        d[k] = int(v)
+    missing = [k for k in keys if k not in d]
+    if missing:
+        die("%s: нет %s — пишется так: %s" % (name, ", ".join(missing), usage))
     if name == "blind":
+        if d["matched"] > d["checked"]:
+            die("blind: matched=%d больше checked=%d" % (d["matched"], d["checked"]))
         d["mismatches"] = multi.get("mismatch", [])
     else:
         d["items"] = multi.get("item", [])
@@ -972,6 +1002,23 @@ def cmd_reopen(state):
     register_row(state, "в работе", None)
 
 
+def cmd_commits(state):
+    """Возобновление верит state.js, а история могла уйти из-под него: reset, rebase,
+    другая ветка. Сданный таск, чьего коммита нет в HEAD, — строка «!»; сбрасывает
+    его оркестратор, потому что код после rebase может лежать на месте под другим sha."""
+    notes = []
+    for tk in state.get("tickets") or []:
+        c = tk.get("commit")
+        if tk.get("status") != "done" or not c:
+            continue
+        r = subprocess.run(["git", "-C", ROOT, "merge-base", "--is-ancestor", c, "HEAD"],
+                           capture_output=True)
+        if r.returncode:
+            notes.append("! таск %s: коммита %s нет в истории — `ap.py ticket %s reset`"
+                         % (tk["id"], c, tk["id"]))
+    return notes or ["коммиты сданных тасков на месте"]
+
+
 def close_wait(state):
     """Ожидание пользователя кончилось: интервал уходит в waits — часы дашборда
     его не считают, это не работа сборки."""
@@ -998,6 +1045,10 @@ def cmd_ask(state, pos, opt):
 
 def main():
     argv = sys.argv[1:]
+    # Справка ничего не трогает: ни state.js, ни снимок, ни сервер.
+    if "--help" in argv or "-h" in argv or argv[:1] == ["help"]:
+        print(__doc__.strip())
+        return
     if "--stop-now" in argv:
         stop_now()
         return
@@ -1011,7 +1062,7 @@ def main():
         if state is None:
             die("state.js ещё нет — начни с `ap.py init`")
         rest = pos[1:]
-        if cmd not in ("", "sync"):
+        if cmd not in ("", "sync", "commits"):
             # Время события ставится до команды: ей самой и журналу нужна одна метка.
             state["updatedAt"] = now()
             beat(state)
@@ -1042,6 +1093,8 @@ def main():
             notes = cmd_finish(state, opt)
         elif cmd == "reopen":
             cmd_reopen(state)
+        elif cmd == "commits":
+            notes = cmd_commits(state)
         elif cmd not in ("", "sync"):
             die("неизвестная команда %s — список в начале ap.py" % cmd)
     recount(state)
